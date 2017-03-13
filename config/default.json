@@ -40,7 +40,7 @@
             "parameters": {}
         },
         "ecs": {
-            "enabled": true,
+            "enabled": false,
             "template": "templates/ecs.yml",
             "parameters": {}
         }

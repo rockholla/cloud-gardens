@@ -353,6 +353,7 @@ Resources:
               git: []
               docker: []
               php: []
+              nodejs: []
           commands:
             'a_add_to_docker_group':
               command: 'usermod -a -G docker jenkins'

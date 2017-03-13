@@ -1,0 +1,31 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Garden EC2 Container Repo
+Parameters:
+  GardenName:
+    Type: String
+    Description: Name of the Garden
+Resources:
+  Ecr:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${GardenName}-ecr'
+      RepositoryPolicyText:
+        Version: '2008-10-17'
+        Statement:
+        - Sid: AllowPushPull
+          Effect: Allow
+          Principal:
+            AWS:
+            - !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':user/', 'Fn::ImportValue': !Sub '${GardenName}-users-admin']]
+          Action:
+          - ecr:GetDownloadUrlForLayer
+          - ecr:BatchGetImage
+          - ecr:BatchCheckLayerAvailability
+          - ecr:PutImage
+          - ecr:InitiateLayerUpload
+          - ecr:UploadLayerPart
+          - ecr:CompleteLayerUpload
+Outputs:
+  ECSRepository:
+    Value: !Ref 'Ecr'

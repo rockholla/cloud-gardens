@@ -1,0 +1,48 @@
+{
+    "log": {
+        "level": "info",
+        "colors": {
+            "debug": "blue",
+            "verbose": "green",
+            "info": "white",
+            "warn": "yellow",
+            "error": "red"
+        },
+        "file": true,
+        "console": true
+    },
+    "aws": {
+        "region": "us-west-2",
+        "profile": "tribe"
+    },
+    "stacks": {
+        "users": {
+            "enabled": true,
+            "template": "templates/users.yml",
+            "parameters": {},
+            "capabilities": ["CAPABILITY_NAMED_IAM"]
+        },
+        "vpc": {
+            "enabled": true,
+            "template": "templates/vpc.yml",
+            "parameters": {}
+        },
+        "integration": {
+            "enabled": true,
+            "template": "templates/integration.yml",
+            "parameters": {
+                "MasterAdminPassword": "password"
+            }
+        },
+        "ecr": {
+            "enabled": true,
+            "template": "templates/ecr.yml",
+            "parameters": {}
+        },
+        "ecs": {
+            "enabled": true,
+            "template": "templates/ecs.yml",
+            "parameters": {}
+        }
+    }
+}

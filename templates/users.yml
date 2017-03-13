@@ -1,0 +1,27 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Garden users
+Resources:
+  IAMAdminUser:
+    Type: "AWS::IAM::User"
+    Properties:
+      ManagedPolicyArns:
+      - "arn:aws:iam::aws:policy/AdministratorAccess"
+      UserName: !Sub '${AWS::StackName}-admin'
+  IAMAdminUserKeys:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Sub '${AWS::StackName}-admin'
+Outputs:
+  IAMAdminUser:
+    Value: !Ref 'IAMAdminUser'
+    Export:
+      Name: !Sub '${AWS::StackName}-admin'
+  IAMAdminUserAccessKey:
+    Value: !Ref 'IAMAdminUserKeys'
+    Export:
+      Name: !Sub '${AWS::StackName}-admin-accesskey'
+  IAMAdminUserSecretKey:
+    Value: !GetAtt IAMAdminUserKeys.SecretAccessKey
+    Export:
+      Name: !Sub '${AWS::StackName}-admin-secretkey'

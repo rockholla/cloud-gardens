@@ -25,14 +25,17 @@ exports.handler = function(argv) {
         })
         .then(function(result) {
             winston.info('Finished provisioning VPC');
+            return gk.provisionEcr(result)
+        })
+        .then(function(result) {
+            winston.info('Finished provisioning ECR');
             return Promise.all([
                 gk.provisionIntegrationResources(result),
-                gk.provisionEcr(result),
                 gk.provisionEcs(result)
             ]);
         })
         .then(function(result) {
-            winston.info('Finished provisioning integration resources, ECR, and ECS');
+            winston.info('Finished provisioning integration resources and ECS');
             winston.warn('If you need to remove CloudFormation stacks and the AWS resources created with this project, please do so via the AWS console at https://console.aws.amazon.com/cloudformation/home')
         })
         .catch(function(error) {

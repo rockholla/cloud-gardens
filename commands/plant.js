@@ -4,8 +4,8 @@ var Groundskeeper   = require('../lib/groundskeeper');
 var winston         = require('winston');
 var config          = require('config');
 
-exports.command = 'provision [garden]';
-exports.desc = 'for starting or maintaining a garden.  A garden is a collection of integration resources and docker swarms for each environment (dev, testing, etc), all in its own ecosystem (VPC).';
+exports.command = 'plant [garden]';
+exports.desc = 'for starting or maintaining a garden.  A garden is a collection of integration resources and a docker cluster for each environment (dev, testing, etc), all in its own ecosystem (VPC).';
 exports.handler = function(argv) {
     var gk = new Groundskeeper(config);
     gk.config.sshkey = argv.garden + '-key';

@@ -5,7 +5,7 @@ var path            = require('path');
 var winston         = require('winston');
 var Groundskeeper   = require('../lib/groundskeeper');
 
-exports.command = 'create-keypair [name]';
+exports.command = 'create-key [name]';
 exports.desc = 'creates a new ssh key, pushes it to AWS, and outputs the resulting private key value';
 exports.handler = function(argv) {
     (new Groundskeeper(require('config'))).createKeyPair(argv.name)

@@ -55,7 +55,7 @@ var argv = require('yargs')
     .help('h')
     .alias('h', 'help')
 
-    .example('$0 create-keypair mykey', 'creates a new ssh key named "mykey"')
-    .example('$0 provision tribe', 'starts or maintains a garden named "tribe"')
+    .example('$0 create-key mykey', 'creates a new ssh key named "mykey"')
+    .example('$0 --region=us-east-1 plant main-east', 'starts or maintains a garden named "main-east" in the us-east-1 region')
 
     .argv;

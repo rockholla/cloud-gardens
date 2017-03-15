@@ -9,6 +9,21 @@ There are a few key tenets for growing projects and the infrastructure to suppor
     * Commits should be small and happen frequently
     * Project commits should trigger builds, testing, and other tasks relevant to the project on an integration server
 
+# How to be a Groundskeeper
+
+A Groundskeeper oversees the creation and maintenance of cloud gardens.  It's pretty easy to do as long as you have access to a AWS or DigitalOcean account where you'd like the garden to live.
+
+Some requirements:
+1. Node/npm installed
+
+Then run `node . help` to see the available commands.
+
+If you'd like to use your own configuration for building and maintaining, feel free to make your own file in the `/config` directory (config is loaded with the [npm config package](https://www.npmjs.com/package/config) and can inherit from the `default.js` config already there).  You just need to set the `NODE_ENV` variable to what you named your config file, something like:
+
+```
+NODE_ENV=myenvironment node . plant mygarden
+```
+------------------------- WIP below ---------------------------
 # Creating a Project
 
 Should require a single step
@@ -32,18 +47,3 @@ What it should do:
     * Datadog for monitoring
     * Blackfire for profiling?
     * AWS services, cloudwatch
-
-# How to be a Groundskeeper
-
-A Groundskeeper oversees the creation and maintenance of cloud gardens.  It's pretty easy to do as long as you have access to a AWS or DigitalOcean account where you'd like the garden to live.
-
-Some requirements:
-1. Node/npm installed
-
-Then run `node . help` to see the available commands.
-
-If you'd like to use your own configuration for building and maintaining, feel free to make your own file in the `/config` directory (config is loaded with the [npm config package](https://www.npmjs.com/package/config) and can inherit from the `default.js` config already there).  You just need to set the `NODE_ENV` variable to what you named your config file, something like:
-
-```
-NODE_ENV=myenvironment node . plant mygarden
-```

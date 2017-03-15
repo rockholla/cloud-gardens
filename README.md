@@ -35,9 +35,15 @@ What it should do:
 
 # How to be a Groundskeeper
 
-It's pretty easy as long as you have access to a AWS or DigitalOcean account where you'd like to make a garden.
+A Groundskeeper oversees the creation and maintenance of cloud gardens.  It's pretty easy to do as long as you have access to a AWS or DigitalOcean account where you'd like the garden to live.
 
 Some requirements:
 1. Node/npm installed
 
 Then run `node . help` to see the available commands.
+
+If you'd like to use your own configuration for building and maintaining, feel free to make your own file in the `/config` directory.  You just need to set the `NODE_ENV` variable to what you named your config file, something like:
+
+```
+NODE_ENV=myconfig node . plant mygarden
+```

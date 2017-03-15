@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 'use strict';
 
-var def     = require('./package.json');
+var pkgjson = require('./package.json');
 var aws     = require('aws-sdk');
 var config  = require('config');
 var winston = require('winston');
+
+process.env.APP_ROOT = __dirname;
 
 winston.setLevels({
     error: 0, warn: 1, info: 2, verbose: 3, debug: 4
@@ -26,7 +28,7 @@ winston.add(winston.transports.File, {
     silent: false,
     colorize: false,
     timestamp: true,
-    filename: './logs/' + def.name + '.log',
+    filename: './logs/' + pkgjson.name + '.log',
     maxsize: 40000,
     maxFiles: 10,
     json: false
@@ -35,6 +37,7 @@ winston.add(winston.transports.File, {
 var argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
     .commandDir('commands')
+    .demandOption(['p', 'r', 'l'])
     .alias('r', 'region')
     .nargs('r', 1)
     .describe('r', 'AWS region')
@@ -46,12 +49,16 @@ var argv = require('yargs')
     .alias('p', 'profile')
     .nargs('p', 1)
     .describe('p', 'AWS named profile')
-    .demandOption(['p', 'r'])
     .default('p', (!config.aws.profile ? undefined : config.aws.profile))
     .coerce('p', function(arg) {
         aws.config.credentials = new aws.SharedIniFileCredentials({profile: arg});
         return arg;
     })
+    .alias('l', 'location')
+    .nargs('l', 1)
+    .describe('l', 'Where to plant the garden')
+    .choices('l', ['aws', 'digitalocean'])
+    .default('l', config.defaultLocation)
     .help('h')
     .alias('h', 'help')
 

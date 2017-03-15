@@ -9,9 +9,10 @@
   },
   "author": "Patrick Force <patrick@tri.be>",
   "private": true,
-  "main": "index.js",
+  "main": "groundskeeper.js",
   "dependencies": {
     "aws-sdk": "^2.27.0",
+    "bluebird": "^3.5.0",
     "chai": "^3.5.0",
     "config": "^1.25.1",
     "mocha": "^3.2.0",

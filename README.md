@@ -23,27 +23,3 @@ If you'd like to use your own configuration for building and maintaining, feel f
 ```
 NODE_ENV=myenvironment node . plant mygarden
 ```
-------------------------- WIP below ---------------------------
-# Creating a Project
-
-Should require a single step
-What it should do:
-1. Create new repo from square one
-2. Create environment resources:
-    - dev and staging installs
-    - connection to integration services for running tests, building, etc.
-    - allow any given project to customize how tests are run, how the project is built, and provisioning of system dependencies such as third-party resources (hosted elasticsearch, RDS, etc)
-
-# Architecture
-
-* Project source:
-    * Get rid of submodules, use dependency management with composer/similar instead (maybe a script to help convert existing projects?), what about base docker images too?
-    * implement common testing strategy
-    * frontend build strategy integration
-    * cache prefixes or strategy around preventing cache conflict so that projects can share a redis or memcached instance
-    * common branching strategy
-    * for any persistent files on a local server, come up with a good strategy for getting those to a different place like s3, related possible use of s3 plugin with projects moving forward
-* Rely on third party services whenever possible, these services should have APIs and be reasonably easy to migrate away from in the future
-    * Datadog for monitoring
-    * Blackfire for profiling?
-    * AWS services, cloudwatch

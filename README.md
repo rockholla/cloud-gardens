@@ -23,3 +23,7 @@ If you'd like to use your own configuration for building and maintaining, feel f
 ```
 NODE_ENV=myenvironment node . plant mygarden
 ```
+
+# Diagram of a garden
+
+![Garden Diagram](https://raw.githubusercontent.com/rockholla/cloud-gardens/master/docs/diagram.jpg)

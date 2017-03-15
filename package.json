@@ -21,6 +21,6 @@
     "yargs": "^7.0.2"
   },
   "scripts": {
-    "tests": "./node_modules/.bin/mocha tests --recursive"
+    "tests": "NODE_ENV=tests ./node_modules/.bin/mocha tests --recursive"
   }
 }

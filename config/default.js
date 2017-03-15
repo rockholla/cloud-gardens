@@ -24,7 +24,7 @@ module.exports = {
         }),
         stacks: {
             users: {
-                enabled: false,
+                enabled: true,
                 parameters: {},
                 capabilities: ["CAPABILITY_NAMED_IAM"]
             },

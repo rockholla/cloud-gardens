@@ -595,17 +595,11 @@ Resources:
             '/var/lib/jenkins/.aws/credentials':
               content: !Join ['', ['[default]',
                 "\n", 'aws_access_key_id = ', { 'Fn::ImportValue': !Sub '${GardenName}-users-admin-accesskey' },
-                "\n", 'aws_secret_access_key = ', { 'Fn::ImportValue': !Sub '${GardenName}-users-admin-secretkey' },
-                "\n\n", '[tribe]',
-                "\n", 'aws_access_key_id = ', { 'Fn::ImportValue': !Sub '${GardenName}-users-admin-accesskey' },
-                "\n", 'aws_secret_access_key = ', { 'Fn::ImportValue': !Sub '${GardenName}-users-admin-secretkey' },
+                "\n", 'aws_secret_access_key = ', { 'Fn::ImportValue': !Sub '${GardenName}-users-admin-secretkey' }
               ]]
             '/var/lib/jenkins/.aws/config':
               content: !Sub |
                 [default]
-                region = ${AWS::Region}
-
-                [profile tribe]
                 region = ${AWS::Region}
           commands:
             'a_start_jenkins':

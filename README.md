@@ -42,8 +42,8 @@ Some requirements:
 
 Then run `node . help` to see the available commands.
 
-If you'd like to use your own configuration for building and maintaining, feel free to make your own file in the `/config` directory.  You just need to set the `NODE_ENV` variable to what you named your config file, something like:
+If you'd like to use your own configuration for building and maintaining, feel free to make your own file in the `/config` directory (config is loaded with the [npm config package](https://www.npmjs.com/package/config) and can inherit from the `default.js` config already there).  You just need to set the `NODE_ENV` variable to what you named your config file, something like:
 
 ```
-NODE_ENV=myconfig node . plant mygarden
+NODE_ENV=myenvironment node . plant mygarden
 ```

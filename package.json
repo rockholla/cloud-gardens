@@ -1,13 +1,13 @@
 {
-  "name": "gardens",
+  "name": "cloud-gardens",
   "version": "0.1.0",
-  "description": "Plant your project, help it grow",
-  "homepage": "http://gardens.tri.be",
+  "description": "Plant your projects and help them grow",
+  "homepage": "https://cloud-gardens.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/moderntribe/gardens"
+    "url": "https://github.com/rockholla/cloud-gardens"
   },
-  "author": "Patrick Force <patrick@tri.be>",
+  "author": "Patrick Force <patrickforce@gmail.com>",
   "private": true,
   "main": "groundskeeper.js",
   "dependencies": {
@@ -21,6 +21,6 @@
     "yargs": "^7.0.2"
   },
   "scripts": {
-    "tests": "NODE_ENV=tests ./node_modules/.bin/mocha tests --recursive"
+    "tests": "./node_modules/.bin/mocha tests --recursive"
   }
 }

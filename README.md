@@ -1,4 +1,4 @@
-# Gardens: plant your project, help it grow
+# Cloud Gardens: plant your projects in the cloud and help them grow
 
 There are a few key tenets for growing projects and the infrastructure to support them:
 
@@ -33,5 +33,11 @@ What it should do:
     * Blackfire for profiling?
     * AWS services, cloudwatch
 
+# How to be a Groundskeeper
 
+It's pretty easy as long as you have access to a AWS or DigitalOcean account where you'd like to make a garden.
 
+Some requirements:
+1. Node/npm installed
+
+Then run `node . help` to see the available commands.

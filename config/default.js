@@ -17,8 +17,8 @@ module.exports = {
     },
     defaultLocation: "aws",
     aws: {
-        region: "us-west-2",
-        profile: "tribe",
+        region: null,
+        profile: "default",
         templatesDirectory: defer(function(config) {
             return process.env.APP_ROOT + '/aws/templates';
         }),

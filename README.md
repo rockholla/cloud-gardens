@@ -11,7 +11,7 @@ There are a few key tenets for growing projects and the infrastructure to suppor
 
 # How to be a Groundskeeper
 
-A Groundskeeper oversees the creation and maintenance of gardens.  It's pretty easy to do as long as you have access to a AWS or DigitalOcean account where you'd like the garden to live.
+A Groundskeeper oversees the creation and maintenance of gardens.  It's pretty easy to do as long as you have access to an AWS or DigitalOcean account where you'd like the garden to live.
 
 Some requirements:
 1. Node/npm installed

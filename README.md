@@ -1,4 +1,4 @@
-# Cloud Gardens: plant your projects in the cloud, help them grow
+# Cloud Gardens: plant your projects, help them grow
 
 There are a few key tenets for growing projects and the infrastructure to support them:
 

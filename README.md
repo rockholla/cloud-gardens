@@ -26,7 +26,7 @@ NODE_ENV=myenvironment node . plant mygarden
 
 # Diagram of a garden
 
-A garden is an encapsulated ecosystem containing any number of isolated environments (dev, test, production, etc.), and integration tools and services for controlling these environments
+A garden is an encapsulated ecosystem containing any number of isolated environments (dev, test, production, etc.), and integration tools and services for controlling these environments.  A garden is capable of serving many environments for many projects.
 
 ![Garden Diagram](https://raw.githubusercontent.com/rockholla/cloud-gardens/master/docs/diagram.jpg)
 

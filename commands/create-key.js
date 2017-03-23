@@ -22,7 +22,7 @@ exports.handler = function(argv) {
     if (argv.cloud == 'aws') exports.awsHandler(argv);
 };
 exports.awsHandler = function(argv) {
-    (new Gardens.Aws.Gardener(require('config'))).createKey(argv.name)
+    (new Gardens.Aws.Gardener(aws.config.credentials.profile, aws.config.region)).createKey(argv.name)
         .then(function(result) {
             exports.callback(argv.name, result)
         })

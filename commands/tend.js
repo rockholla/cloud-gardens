@@ -2,9 +2,8 @@
 
 var Gardens         = require('../lib');
 var winston         = require('winston');
-var config          = require('config');
 var afterCreateKey  = require('./create-key').callback;
-var Promise         = require('bluebird');
+var aws             = require('aws-sdk');
 
 exports.command = 'tend [garden]';
 exports.desc = 'for starting or maintaining a garden.  A garden is a collection of integration resources and application environments (dev, testing, etc), all in its own cloud ecosystem.';
@@ -19,7 +18,7 @@ exports.handler = function(argv) {
 
 exports.awsHandler = function(argv) {
 
-    var gardener = new Gardens.Aws.Gardener(config);
+    var gardener = new Gardens.Aws.Gardener(aws.config.credentials.profile, aws.config.region);
     var key      = argv.garden + '-key';
 
     winston.info('Tending all resources for the garden named "' + argv.garden + '"');

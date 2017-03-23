@@ -1,5 +1,7 @@
 # Cloud Gardens: plant your projects, help them grow
 
+*NOTE: this repo is currently a work in progress*
+
 There are a few key tenets for growing projects and the infrastructure to support them:
 
 1. The infrastructure running any given project, be it your local development or production, should be identical and disposable, immutable

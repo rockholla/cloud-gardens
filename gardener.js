@@ -6,8 +6,6 @@ var aws     = require('aws-sdk');
 var config  = require('config');
 var winston = require('winston');
 
-process.env.APP_ROOT = __dirname;
-
 winston.setLevels({
     error: 0, warn: 1, info: 2, verbose: 3, debug: 4
 });

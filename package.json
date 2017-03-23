@@ -23,6 +23,7 @@
     "yargs": "^7.0.2"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha tests --recursive"
+    "test": "./node_modules/.bin/mocha \"tests/{,**/}*.test.js\"",
+    "test-all": "./node_modules/.bin/mocha \"tests/{,**/}*.test.js\" \"tests/{,**/}*.spec.js\""
   }
 }

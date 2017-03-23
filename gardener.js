@@ -59,7 +59,7 @@ var argv = require('yargs')
     .default('cloud', config.cloud)
     .option('dryrun', {
         alias: 'd',
-        describe: 'If present and if the operation supports it, a dry run at the operation will be attempted',
+        describe: 'If present and if the operation supports it, a dry run of the operation will be attempted',
         type: 'boolean'
     })
     .help('h')

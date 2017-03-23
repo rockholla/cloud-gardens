@@ -2,7 +2,6 @@
 
 var Gardens = require('../lib');
 var winston = require('winston');
-var aws     = require('aws-sdk');
 
 exports.command = 'raze [garden]';
 exports.desc = 'for completely destroying an existing garden.';
@@ -25,7 +24,7 @@ exports.handler = function(argv) {
 
 exports.awsHandler = function(argv) {
 
-    var gardener = new Gardens.Aws.Gardener(aws.config.credentials.profile, aws.config.region);
+    var gardener = new Gardens.Aws.Gardener(argv.profile, argv.region);
 
     winston.info('Razing the garden named "' + argv.garden + '"');
     gardener.terraform(argv.garden, 'na', 'destroy')

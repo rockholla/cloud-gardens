@@ -40,18 +40,10 @@ var argv = require('yargs')
     .nargs('region', 1)
     .describe('region', 'AWS region')
     .default('region', (!config.aws.region ? undefined : config.aws.region))
-    .coerce('region', function(arg) {
-        aws.config.update({region: arg});
-        return arg;
-    })
     .alias('profile', 'p')
     .nargs('profile', 1)
     .describe('profile', 'AWS named profile to use for credentials')
     .default('profile', (!config.aws.profile ? undefined : config.aws.profile))
-    .coerce('profile', function(arg) {
-        aws.config.credentials = new aws.SharedIniFileCredentials({profile: arg});
-        return arg;
-    })
     .alias('cloud', 'c')
     .nargs('cloud', 1)
     .describe('cloud', 'The cloud where the garden lives')

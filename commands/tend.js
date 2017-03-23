@@ -3,13 +3,16 @@
 var Gardens         = require('../lib');
 var winston         = require('winston');
 var afterCreateKey  = require('./create-key').callback;
-var aws             = require('aws-sdk');
 
 exports.command = 'tend [garden]';
 exports.desc = 'for starting or maintaining a garden.  A garden is a collection of integration resources and application environments (dev, testing, etc), all in its own cloud ecosystem.';
 
 exports.handler = function(argv) {
-    if (!argv.garden || !argv.garden.match(/[a-zA-Z\-_]+/)) return winston.error('Please provide a valid garden name, with allowed pattern [a-zA-Z\\-_]+');
+    try {
+        Gardens.validateName(argv.garden);
+    } catch (error) {
+        return winston.error(error);
+    }
     if (argv.cloud != 'aws') {
         return winston.error("Only AWS is supported right now");
     }
@@ -18,7 +21,7 @@ exports.handler = function(argv) {
 
 exports.awsHandler = function(argv) {
 
-    var gardener = new Gardens.Aws.Gardener(aws.config.credentials.profile, aws.config.region);
+    var gardener = new Gardens.Aws.Gardener(argv.profile, argv.region);
     var key      = argv.garden + '-key';
 
     winston.info('Tending all resources for the garden named "' + argv.garden + '"');

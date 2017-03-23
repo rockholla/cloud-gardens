@@ -37,7 +37,7 @@ winston.add(winston.transports.File, {
 var argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
     .commandDir('commands')
-    .demandOption(['profile', 'region', 'location'])
+    .demandOption(['profile', 'region', 'cloud'])
     .alias('region', 'r')
     .nargs('region', 1)
     .describe('region', 'AWS region')
@@ -54,15 +54,21 @@ var argv = require('yargs')
         aws.config.credentials = new aws.SharedIniFileCredentials({profile: arg});
         return arg;
     })
-    .alias('location', 'l')
-    .nargs('location', 1)
-    .describe('location', 'Where to plant the garden')
-    .choices('location', ['aws', 'digitalocean'])
-    .default('location', config.defaultLocation)
+    .alias('cloud', 'c')
+    .nargs('cloud', 1)
+    .describe('cloud', 'The cloud where the garden lives')
+    .choices('cloud', ['aws', 'digitalocean'])
+    .default('cloud', config.cloud)
+    .option('dryrun', {
+        alias: 'd',
+        describe: 'If present and if the operation supports it, a dry run at the operation will be attempted',
+        type: 'boolean'
+    })
     .help('h')
     .alias('help', 'h')
+    .demandCommand(1, 'you must include a command')
 
     .example('$0 --region=us-west-2 create-key mykey', 'creates a new ssh key named "mykey" in the us-west-2 region')
-    .example('$0 --region=us-east-1 plant main-east', 'starts or maintains a garden named "main-east" in the us-east-1 region')
+    .example('$0 --region=us-east-1 tend main-east', 'starts or maintains a garden named "main-east" in the us-east-1 region')
 
     .argv;

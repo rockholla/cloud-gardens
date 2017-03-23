@@ -9,9 +9,9 @@ There are a few key tenets for growing projects and the infrastructure to suppor
     * Commits should be small and happen frequently
     * Project commits should trigger builds, testing, and other tasks relevant to the project on an integration server
 
-# How to be a Groundskeeper
+# How to be a Gardener
 
-A Groundskeeper oversees the creation and maintenance of gardens.  It's pretty easy to do as long as you have access to an AWS or DigitalOcean account where you'd like the garden to live.
+A Gardener oversees the creation and maintenance of gardens.  It's pretty easy to do as long as you have access to an AWS or DigitalOcean account where you'd like the garden to live.
 
 Some requirements:
 1. Node/npm installed

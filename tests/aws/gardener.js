@@ -1,14 +1,14 @@
 'use strict';
 
-var chai            = require('chai');
-var expect          = chai.expect; // we are using the "expect" style of Chai
-var Groundskeeper   = require('../../lib');
-var Promise         = require('bluebird');
+var chai      = require('chai');
+var expect    = chai.expect; // we are using the "expect" style of Chai
+var Gardens   = require('../../lib');
+var Promise   = require('bluebird');
 
 describe('Aws.Gardener', function() {
 
   it('makeCloudFormParameters() should return an expected structure', function() {
-    var gardener = new Groundskeeper.Aws.Gardener({});
+    var gardener = new Gardens.Aws.Gardener({});
     expect(gardener.makeCloudFormParameters({
         "one": 1, "two": 2
     })).to.deep.equal([
@@ -18,7 +18,7 @@ describe('Aws.Gardener', function() {
   });
 
   it('cloudForm should return to us a promise telling us that the stack is disabled', function() {
-    var gardener = new Groundskeeper.Aws.Gardener({});
+    var gardener = new Gardens.Aws.Gardener({});
     return gardener.cloudForm('__gardentests', 'users', { enabled: false }).then(function(result) {
         expect(result).to.deep.equal(['__gardentests', 'users', gardener.disabledStackMessage]);
     });

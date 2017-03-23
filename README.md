@@ -1,6 +1,6 @@
 # Cloud Gardens: plant your projects, help them grow
 
-**NOTE: this repo is currently a work in progress**
+*** **NOTE: this repo is currently a work in progress** ***
 
 There are a few key tenets for growing projects and the infrastructure to support them:
 

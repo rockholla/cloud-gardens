@@ -2,6 +2,8 @@
 
 *** **NOTE: this repo is currently a work in progress** ***
 
+[![Build Status](https://semaphoreci.com/api/v1/rockholla/cloud-gardens/branches/develop/badge.svg)](https://semaphoreci.com/rockholla/cloud-gardens)
+
 There are a few key tenets for growing projects and the infrastructure to support them:
 
 1. The infrastructure running any given project, be it your local development or production, should be identical and disposable, immutable

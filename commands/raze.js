@@ -32,7 +32,7 @@ exports.awsHandler = function(argv) {
     gardener.getAccountId()
         .then(function(result) {
             winston.info('Ensuring that the state storage bucket exists');
-            return gardener.createS3Bucket(result + '-garden-states');
+            return gardener.createS3Bucket(result + gardener.stateBucketSuffix);
         })
         .then(function(result) {
             gardener.terraform(argv.garden, 'na', 'destroy', result.name);

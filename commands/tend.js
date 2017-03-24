@@ -38,7 +38,7 @@ exports.awsHandler = function(argv) {
         })
         .then(function(result) {
             winston.info('Ensuring that the state storage bucket exists');
-            return gardener.createS3Bucket(result + '-garden-states');
+            return gardener.createS3Bucket(result + gardener.stateBucketSuffix);
         })
         .then(function(result) {
             return gardener.terraform(argv.garden, key, (argv.dryrun ? 'plan' : 'apply'), result.name);

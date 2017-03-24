@@ -4,6 +4,7 @@ var fs          = require('fs');
 var path        = require('path');
 var winston     = require('winston');
 var Gardens     = require('../lib');
+var config      = require('config');
 
 exports.command = 'create-key [name]';
 exports.desc = 'creates a new ssh key, pushes it to the cloud provider as an accepted key, and saves the private key locally to .keys';

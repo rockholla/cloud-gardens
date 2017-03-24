@@ -2,6 +2,7 @@
 
 var Gardens = require('../lib');
 var winston = require('winston');
+var config  = require('config');
 
 exports.command = 'raze [garden]';
 exports.desc = 'for completely destroying an existing garden.';
@@ -27,7 +28,15 @@ exports.awsHandler = function(argv) {
     var gardener = new Gardens.Aws.Gardener(argv.profile, argv.region);
 
     winston.info('Razing the garden named "' + argv.garden + '"');
-    gardener.terraform(argv.garden, 'na', 'destroy')
+    winston.info('Getting AWS account ID');
+    gardener.getAccountId()
+        .then(function(result) {
+            winston.info('Ensuring that the state storage bucket exists');
+            return gardener.createS3Bucket(result + '-garden-states');
+        })
+        .then(function(result) {
+            gardener.terraform(argv.garden, 'na', 'destroy', result.name);
+        })
         .then(function(result) {
             winston.info("DONE razing the garden");
         })

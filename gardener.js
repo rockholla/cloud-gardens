@@ -36,19 +36,25 @@ var argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
     .commandDir('commands')
     .demandOption(['profile', 'region', 'cloud'])
-    .alias('region', 'r')
-    .nargs('region', 1)
-    .describe('region', 'AWS region')
-    .default('region', (!config.aws.region ? undefined : config.aws.region))
-    .alias('profile', 'p')
-    .nargs('profile', 1)
-    .describe('profile', 'AWS named profile to use for credentials')
-    .default('profile', (!config.aws.profile ? undefined : config.aws.profile))
-    .alias('cloud', 'c')
-    .nargs('cloud', 1)
-    .describe('cloud', 'The cloud where the garden lives')
-    .choices('cloud', ['aws', 'digitalocean'])
-    .default('cloud', config.cloud)
+    .option('region', {
+        alias: 'r',
+        describe: 'AWS region',
+        nargs: 1,
+        default: (!config.aws.region ? undefined : config.aws.region)
+    })
+    .option('profile', {
+        alias: 'p',
+        describe: 'AWS named profile to use for credentials',
+        nargs: 1,
+        default: (!config.aws.profile ? undefined : config.aws.profile)
+    })
+    .option('cloud', {
+        alias: 'c',
+        describe: 'The cloud where the garden lives',
+        nargs: 1,
+        default: (!config.cloud ? undefined : config.cloud),
+        choices: ['aws', 'digitalocean']
+    })
     .option('dryrun', {
         alias: 'd',
         describe: 'If present and if the operation supports it, a dry run of the operation will be attempted',

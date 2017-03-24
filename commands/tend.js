@@ -3,6 +3,7 @@
 var Gardens         = require('../lib');
 var winston         = require('winston');
 var afterCreateKey  = require('./create-key').callback;
+var config          = require('config');
 
 exports.command = 'tend [garden]';
 exports.desc = 'for starting or maintaining a garden.  A garden is a collection of integration resources and application environments (dev, testing, etc), all in its own cloud ecosystem.';
@@ -32,7 +33,15 @@ exports.awsHandler = function(argv) {
             } else {
                 afterCreateKey(key, result);
             }
-            return gardener.terraform(argv.garden, key, (argv.dryrun ? 'plan' : 'apply'));
+            winston.info('Getting AWS account ID');
+            return gardener.getAccountId();
+        })
+        .then(function(result) {
+            winston.info('Ensuring that the state storage bucket exists');
+            return gardener.createS3Bucket(result + '-garden-states');
+        })
+        .then(function(result) {
+            return gardener.terraform(argv.garden, key, (argv.dryrun ? 'plan' : 'apply'), result.name);
         })
         .then(function(result) {
             winston.info("DONE tending the garden");

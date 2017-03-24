@@ -2,6 +2,14 @@
  * See https://github.com/segmentio/stack for more info on the basis of this terraform strategy
  */
 
+terraform {
+  backend "s3" {
+    bucket = "cloud-gardens"
+    key = "garden"
+    region = "us-west-2"
+  }
+}
+
 variable "profile" {
   description = "The AWS profile to use"
 }
@@ -110,16 +118,6 @@ variable "extra_cloud_config_type" {
 variable "extra_cloud_config_content" {
   description = "Extra cloud config content"
   default     = ""
-}
-
-variable "internal_subnets" {
-  description = "a list of CIDRs for internal subnets in your VPC, must be set if the cidr variable is defined, needs to have as many elements as there are availability zones"
-  default     = ["10.30.0.0/19" ,"10.30.64.0/19", "10.30.128.0/19"]
-}
-
-variable "external_subnets" {
-  description = "a list of CIDRs for external subnets in your VPC, must be set if the cidr variable is defined, needs to have as many elements as there are availability zones"
-  default     = ["10.30.32.0/20", "10.30.96.0/20", "10.30.160.0/20"]
 }
 
 provider "aws" {

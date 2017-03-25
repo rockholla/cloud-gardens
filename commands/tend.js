@@ -1,8 +1,9 @@
 'use strict';
 
-var Gardens         = require('../lib');
+var path            = require('path');
+var Gardens         = require(path.join('..', 'lib'));
 var winston         = require('winston');
-var afterCreateKey  = require('./create-key').callback;
+var afterCreateKey  = require(path.join(__dirname, 'create-key')).callback;
 var config          = require('config');
 
 exports.command = 'tend [garden]';

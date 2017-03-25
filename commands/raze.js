@@ -1,6 +1,7 @@
 'use strict';
 
-var Gardens     = require('../lib');
+var path        = require('path');
+var Gardens     = require(path.join('..', 'lib'));
 var winston     = require('winston');
 var config      = require('config');
 var inquirer    = require('inquirer');

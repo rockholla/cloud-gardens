@@ -1,8 +1,9 @@
 'use strict';
 
+var path    = require('path');
 var chai    = require('chai');
 var expect  = chai.expect; // we are using the "expect" style of Chai
-var Gardens = require('../../lib');
+var Gardens = require(path.join('..', '..', 'lib'));
 
 describe('Aws.Gardener', function() {
 

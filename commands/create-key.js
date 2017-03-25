@@ -3,7 +3,7 @@
 var fs          = require('fs');
 var path        = require('path');
 var winston     = require('winston');
-var Gardens     = require('../lib');
+var Gardens     = require(path.join('..', 'lib'));
 var config      = require('config');
 
 exports.command = 'create-key [name]';

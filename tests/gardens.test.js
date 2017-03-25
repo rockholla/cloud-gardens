@@ -1,8 +1,9 @@
 'use strict';
 
+var path    = require('path');
 var chai    = require('chai');
 var expect  = chai.expect;
-var Gardens = require('../lib');
+var Gardens = require(path.join('..', 'lib'));
 
 describe('Gardens', function() {
 

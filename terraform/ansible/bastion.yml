@@ -1,0 +1,6 @@
+---
+- name: Provision Bastion Server
+  hosts: all
+  become: yes
+
+  tasks: []

@@ -4,6 +4,8 @@
 
 [![Build Status](https://semaphoreci.com/api/v1/rockholla/cloud-gardens/branches/develop/badge.svg)](https://semaphoreci.com/rockholla/cloud-gardens)
 
+Requirements:
+
 There are a few key tenets for growing projects and the infrastructure to support them:
 
 1. The infrastructure running any given project, be it your local development or production, should be identical and disposable, immutable
@@ -18,7 +20,10 @@ There are a few key tenets for growing projects and the infrastructure to suppor
 A Gardener oversees the creation and maintenance of gardens.  It's pretty easy to do as long as you have access to an AWS or DigitalOcean account where you'd like the garden to live.
 
 Some requirements:
-1. Node/npm installed
+
+1. [Nodejs](https://nodejs.org)
+2. [Terraform](https://www.terraform.io/intro/getting-started/install.html)
+3. [Ansible](http://docs.ansible.com/ansible/intro_installation.html)
 
 Then run `node . help` to see the available commands.
 

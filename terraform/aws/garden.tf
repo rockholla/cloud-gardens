@@ -4,9 +4,9 @@
 
 terraform {
   backend "s3" {
-    bucket = "cloud-gardens"
-    key = "garden"
-    region = "us-west-2"
+    bucket = "cloud-gardens" // this is just a basic default, will be set dynamically when tending gardens
+    key = "garden" // this is just a basic default, will be set dynamically when tending gardens
+    region = "us-west-2" // this is just a basic default, will be set dynamically when tending gardens
   }
 }
 
@@ -18,12 +18,21 @@ variable "region" {
   description = "the AWS region in which resources are created, you must set the availability_zones variable as well if you define this value to something other than the default"
 }
 
+provider "aws" {
+  profile = "${var.profile}"
+  region = "${var.region}"
+}
+
 variable "name" {
   description = "the name of your garden, e.g. \"segment\""
 }
 
-variable "key" {
-  description = "the name of the ssh key to use, e.g. \"internal-key\""
+variable "domain" {
+  description = "The base domain name to use (top and second level e.g. \"gardens.local\")"
+}
+
+variable "key_name" {
+  description = "the name of the ssh key pair to use, e.g. \"internal-key\""
 }
 
 variable "cidr" {
@@ -120,26 +129,33 @@ variable "extra_cloud_config_content" {
   default     = ""
 }
 
-provider "aws" {
-  profile = "${var.profile}"
-  region = "${var.region}"
-}
-
 data "aws_availability_zones" "available" {}
-
-module "defaults" {
-  source = "github.com/segmentio/stack//defaults"
-  region = "${var.region}"
-  cidr   = "${var.cidr}"
-}
 
 module "vpc" {
   source                  = "./vpc"
-  name                    = "${var.name}"
+  garden                  = "${var.name}"
   cidr                    = "${var.cidr}"
   internal_subnet_pattern = "${var.internal_subnet_pattern}"
   external_subnet_pattern = "${var.external_subnet_pattern}"
   availability_zones      = "${data.aws_availability_zones.available.names}"
+}
+
+module "security_groups" {
+  source      = "./security-groups"
+  garden      = "${var.name}"
+  vpc_id      = "${module.vpc.id}"
+  cidr        = "${var.cidr}"
+}
+
+module "bastion" {
+  source          = "./bastion"
+  garden          = "${var.name}"
+  region          = "${var.region}"
+  instance_type   = "${var.bastion_instance_type}"
+  security_groups = "${module.security_groups.external_ssh},${module.security_groups.internal_ssh}"
+  vpc_id          = "${module.vpc.id}"
+  subnet_id       = "${element(module.vpc.external_subnets, 0)}"
+  key_name        = "${var.key_name}"
 }
 
 // The region in which the infra lives.
@@ -148,23 +164,13 @@ output "region" {
 }
 
 // The bastion host IP.
-# output "bastion_ip" {
-#   value = "${module.bastion.external_ip}"
-# }
+output "bastion_ip" {
+  value = "${module.bastion.external_ip}"
+}
 
 # // The internal route53 zone ID.
 # output "zone_id" {
 #   value = "${module.dns.zone_id}"
-# }
-
-# // Security group for internal ELBs.
-# output "internal_elb" {
-#   value = "${module.security_groups.internal_elb}"
-# }
-
-# // Security group for external ELBs.
-# output "external_elb" {
-#   value = "${module.security_groups.external_elb}"
 # }
 
 // Comma separated list of internal subnet IDs.

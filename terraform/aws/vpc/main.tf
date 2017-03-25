@@ -1,5 +1,5 @@
-variable "name" {
-  description = "Name tag, e.g stack"
+variable "garden" {
+  description = "The name of the garden"
 }
 
 variable "cidr" {
@@ -29,7 +29,8 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "${var.name}"
+    Name    = "${var.garden}-vpc"
+    Garden  = "${var.garden}"
   }
 }
 
@@ -41,7 +42,8 @@ resource "aws_internet_gateway" "main" {
   vpc_id = "${aws_vpc.main.id}"
 
   tags {
-    Name = "${var.name}"
+    Name    = "${var.garden}-gateway"
+    Garden  = "${var.garden}"
   }
 }
 
@@ -68,7 +70,8 @@ resource "aws_subnet" "internal" {
   count             = "${length(var.availability_zones)}"
 
   tags {
-    Name = "${var.name}-${format("internal-%03d", count.index+1)}"
+    Name    = "${var.garden}-${format("internal-%03d", count.index+1)}"
+    Garden  = "${var.garden}"
   }
 }
 
@@ -80,7 +83,8 @@ resource "aws_subnet" "external" {
   map_public_ip_on_launch = true
 
   tags {
-    Name = "${var.name}-${format("external-%03d", count.index+1)}"
+    Name    = "${var.garden}-${format("external-%03d", count.index+1)}"
+    Garden  = "${var.garden}"
   }
 }
 
@@ -92,7 +96,8 @@ resource "aws_route_table" "external" {
   vpc_id = "${aws_vpc.main.id}"
 
   tags {
-    Name = "${var.name}-external-001"
+    Name    = "${var.garden}-external-001"
+    Garden  = "${var.garden}"
   }
 }
 
@@ -107,7 +112,8 @@ resource "aws_route_table" "internal" {
   vpc_id = "${aws_vpc.main.id}"
 
   tags {
-    Name = "${var.name}-${format("internal-%03d", count.index+1)}"
+    Name    = "${var.garden}-${format("internal-%03d", count.index+1)}"
+    Garden  = "${var.garden}"
   }
 }
 

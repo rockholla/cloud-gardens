@@ -1,0 +1,20 @@
+{
+    "log": {
+        "level": "info",
+        "colors": {
+            "debug": "blue",
+            "verbose": "green",
+            "info": "white",
+            "warn": "yellow",
+            "error": "red"
+        },
+        "file": true,
+        "console": true
+    },
+    "domain": "gardens.local",
+    "cloud": "aws",
+    "aws": {
+        "region": null,
+        "profile": "default"
+    }
+}

@@ -5,4 +5,4 @@ node_modules
 logs/*
 !logs/.keep
 config/*
-!config/default.js
+!config/default.json

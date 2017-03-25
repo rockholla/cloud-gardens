@@ -35,7 +35,7 @@ winston.add(winston.transports.File, {
 var argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
     .commandDir('commands')
-    .demandOption(['profile', 'region', 'cloud'])
+    .demandOption(['cloud'])
     .option('region', {
         alias: 'r',
         describe: 'AWS region',

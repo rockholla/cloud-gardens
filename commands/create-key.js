@@ -17,10 +17,8 @@ exports.callback = function(name, key) {
     });
 };
 exports.handler = function(argv) {
-    if (argv.cloud != 'aws') {
-        return winston.error("Only AWS is supported right now");
-    }
     if (argv.cloud == 'aws') exports.awsHandler(argv);
+    else if (argv.cloud == 'digitalocean') exports.digitaloceanHandler(argv);
 };
 exports.awsHandler = function(argv) {
     (new Gardens.Aws.Gardener(argv.profile, argv.region)).createKey(argv.name)
@@ -31,3 +29,7 @@ exports.awsHandler = function(argv) {
             winston.error(result);
         });
 };
+exports.digitaloceanHandler = function(argv) {
+    winston.error("Only AWS is supported right now");
+    process.exit(1);
+}

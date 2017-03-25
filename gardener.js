@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 'use strict';
 
 var pkgjson = require('./package.json');

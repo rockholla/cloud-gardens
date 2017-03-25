@@ -1,6 +1,7 @@
 'use strict';
 
-var pkgjson = require('./package.json');
+var path    = require('path');
+var pkgjson = require(path.join(__dirname, 'package.json'));
 var aws     = require('aws-sdk');
 var config  = require('config');
 var winston = require('winston');

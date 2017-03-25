@@ -16,7 +16,7 @@ var newConfig   = {
 };
 
 exports.command = 'init [name]';
-exports.desc = 'initializes a new named configuration, which tells us where in the cloud your gardens live, how they\'re accessed and tended';
+exports.desc = 'initializes a new named configuration, which tells where in the cloud your gardens live, how they\'re accessed, tended, etc.  Configuration files are saved to \'/config/[name].json\'.';
 exports.handler = function(argv) {
     if (!argv.name) return winston.error('Please enter a name for the new configuration');
     inquirer.prompt({

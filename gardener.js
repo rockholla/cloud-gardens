@@ -64,7 +64,4 @@ var argv = require('yargs')
     .alias('help', 'h')
     .demandCommand(1, 'you must include a command')
 
-    .example('$0 --region=us-west-2 create-key mykey', 'creates a new ssh key named "mykey" in the us-west-2 region')
-    .example('$0 --region=us-east-1 tend main-east', 'starts or maintains a garden named "main-east" in the us-east-1 region')
-
     .argv;

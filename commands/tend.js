@@ -65,7 +65,7 @@ exports.awsHandler = function(argv) {
             nameServers.forEach(function(nameServer) {
                 winston.info(`    ${nameServer}`);
             });
-            winston.info("You should make sure the registrar for your domain is updated to point to the name servers above.")
+            winston.info("You should make sure the registrar for the domain '" + config.domain + "' is updated to point to the name servers above.")
         })
         .catch(function(error) {
             winston.error(error);

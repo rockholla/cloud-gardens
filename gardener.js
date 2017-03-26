@@ -32,6 +32,8 @@ winston.add(winston.transports.File, {
     json: false
 });
 
+winston.info(`Using config "${config.config_name}"`);
+
 var argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
     .commandDir('commands')

@@ -7,6 +7,7 @@ var Gardens     = require(path.join('..', 'lib'));
 var config      = require('config');
 var inquirer    = require('inquirer');
 var newConfig   = {
+    config_name: null,
     cloud: null,
     domain: null,
     aws: {
@@ -19,6 +20,7 @@ exports.command = 'init [name]';
 exports.desc = 'initializes a new named configuration, which tells where in the cloud your gardens live, how they\'re accessed, tended, etc.  Configuration files are saved to \'/config/[name].json\'.';
 exports.handler = function(argv) {
     if (!argv.name) return winston.error('Please enter a name for the new configuration');
+    newConfig.config_name = argv.name;
     inquirer.prompt({
         name: 'cloud',
         type: 'list',

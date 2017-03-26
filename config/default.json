@@ -1,4 +1,5 @@
 {
+    "config_name": "default",
     "log": {
         "level": "info",
         "colors": {

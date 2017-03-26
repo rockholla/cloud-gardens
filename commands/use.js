@@ -19,6 +19,7 @@ exports.handler = function(argv) {
             } catch (error) {}
             glob(path.join(__dirname, '..', 'config', argv.name + '.*'), function(error, files) {
                 fs.symlinkSync(files[0], path.join(__dirname, '..', 'config', 'local' + path.extname(files[0])));
+                winston.info(`Now using config "${argv.name}"`);
             });
         });
     });

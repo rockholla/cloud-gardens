@@ -17,10 +17,11 @@
     "config": "^1.25.1",
     "inquirer": "^3.0.6",
     "mocha": "^3.2.0",
+    "mockery": "^2.0.0",
     "winston": "^2.3.1",
     "yargs": "^7.0.2"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha \"tests/{,**/}*.test.js\" \"tests/{,**/}*.spec.js\""
+    "test": "./node_modules/.bin/mocha \"tests/{,**/}*.test.js\""
   }
 }

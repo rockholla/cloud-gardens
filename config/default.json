@@ -17,5 +17,8 @@
     "aws": {
         "region": null,
         "profile": "default"
+    },
+    "bastion": {
+        "count": 1
     }
 }

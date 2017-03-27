@@ -31,7 +31,7 @@ exports.awsHandler = function(argv) {
 
     var gardener    = new Gardens.Aws.Gardener(argv.profile, argv.region);
     var keyName     = argv.garden + gardener.keyNameSuffix;
-    var stateBucket  = null;
+    var stateBucket = null;
 
     try {
         Gardens.Aws.validateArgs(argv);
@@ -48,10 +48,15 @@ exports.awsHandler = function(argv) {
             return gardener.createS3Bucket(stateBucket);
         })
         .then(function(result) {
+            winston.info('Ensuring that our hosted zone exists for the domain');
+            return gardener.createHostedZone(config.domain);
+        })
+        .then(function(result) {
             return gardener.terraform('destroy', stateBucket, {
                 'name': argv.garden,
                 'domain': config.domain,
-                'key_name': keyName
+                'key_name': keyName,
+                'hosted_zone_id': result.HostedZone.Id
             });
         })
         .then(function(result) {

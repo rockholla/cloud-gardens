@@ -21,10 +21,11 @@ exports.handler = function(argv) {
 
 exports.awsHandler = function(argv) {
 
-    var gardener    = new Gardens.Aws.Gardener(argv.profile, argv.region);
-    var keyName     = argv.profile + '-' + argv.garden + gardener.keyNameSuffix;
-    var stateBucket = null;
-    var nameServers = null;
+    var gardener        = new Gardens.Aws.Gardener(argv.profile, argv.region);
+    var keyName         = argv.profile + '-' + argv.garden + gardener.keyNameSuffix;
+    var stateBucket     = null;
+    var nameServers     = null;
+    var hostedZoneId    = null;
 
     try {
         Gardens.Aws.validateArgs(argv);
@@ -53,11 +54,14 @@ exports.awsHandler = function(argv) {
             return gardener.createHostedZone(config.domain);
         })
         .then(function(result) {
-            nameServers = result.DelegationSet.NameServers;
+            nameServers     = result.DelegationSet.NameServers;
+            hostedZoneId    = result.HostedZone.Id;
             return gardener.terraform((argv.dryrun ? 'plan' : 'apply'), stateBucket, {
                 'name': argv.garden,
                 'domain': config.domain,
-                'key_name': keyName
+                'key_name': keyName,
+                'bastion_count': config.bastion.count,
+                'hosted_zone_id': hostedZoneId
             });
         })
         .then(function(result) {

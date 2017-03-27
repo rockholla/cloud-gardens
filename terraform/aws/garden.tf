@@ -31,6 +31,10 @@ variable "domain" {
   description = "The base domain name to use (top and second level e.g. \"gardens.local\")"
 }
 
+variable "hosted_zone_id" {
+  description = "The Hosted Zone ID"
+}
+
 variable "key_name" {
   description = "the name of the ssh key pair to use, e.g. \"internal-key\""
 }
@@ -48,6 +52,11 @@ variable "internal_subnet_pattern" {
 variable "external_subnet_pattern" {
   description = "a pattern for setting external subnets, x starts with 32, increments by 64 for each subnet, one in each availability zone"
   default     = "10.30.x.0/20"
+}
+
+variable "bastion_count" {
+  description = "the number of bastion instances"
+  default     = 1
 }
 
 variable "bastion_instance_type" {
@@ -152,10 +161,19 @@ module "bastion" {
   garden          = "${var.name}"
   region          = "${var.region}"
   instance_type   = "${var.bastion_instance_type}"
-  security_groups = "${module.security_groups.external_ssh},${module.security_groups.internal_ssh}"
+  instance_count  = "${var.bastion_count}"
+  security_groups = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
   vpc_id          = "${module.vpc.id}"
   subnet_id       = "${element(module.vpc.external_subnets, 0)}"
   key_name        = "${var.key_name}"
+}
+
+resource "aws_route53_record" "bastion" {
+  zone_id = "${var.hosted_zone_id}"
+  name    = "bastion.${var.domain}"
+  type    = "A"
+  ttl     = "300"
+  records = ["${module.bastion.external_ips}"]
 }
 
 // The region in which the infra lives.
@@ -163,15 +181,10 @@ output "region" {
   value = "${var.region}"
 }
 
-// The bastion host IP.
-output "bastion_ip" {
-  value = "${module.bastion.external_ip}"
+// The bastion host IPs.
+output "bastion_ips" {
+  value = ["${module.bastion.external_ips}"]
 }
-
-# // The internal route53 zone ID.
-# output "zone_id" {
-#   value = "${module.dns.zone_id}"
-# }
 
 // Comma separated list of internal subnet IDs.
 output "internal_subnets" {

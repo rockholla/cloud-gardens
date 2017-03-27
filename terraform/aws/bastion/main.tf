@@ -12,6 +12,10 @@ variable "instance_type" {
   description = "Instance type, see a list at: https://aws.amazon.com/ec2/instance-types/"
 }
 
+variable "instance_count" {
+  description = "the number of bastion instances to stand up"
+}
+
 variable "region" {
   description = "AWS Region, e.g us-west-2"
 }
@@ -35,11 +39,13 @@ variable "subnet_id" {
 module "ami" {
   source        = "github.com/terraform-community-modules/tf_aws_ubuntu_ami/ebs"
   region        = "${var.region}"
-  distribution  = "trusty"
+  distribution  = "xenial"
   instance_type = "${var.instance_type}"
+  storagetype   = "ebs-ssd"
 }
 
 resource "aws_instance" "bastion" {
+  count                  = "${var.instance_count}"
   ami                    = "${module.ami.ami_id}"
   source_dest_check      = false
   instance_type          = "${var.instance_type}"
@@ -50,7 +56,7 @@ resource "aws_instance" "bastion" {
   user_data              = "${file(format("%s/user_data.sh", path.module))}"
 
   tags {
-    Name    = "${var.garden}-bastion"
+    Name    = "${var.garden}-bastion-${count.index + 1}"
     Garden  = "${var.garden}"
   }
 
@@ -71,7 +77,8 @@ resource "aws_instance" "bastion" {
       "sudo apt-add-repository -y ppa:ansible/ansible",
       "sudo apt-get update",
       "sudo apt-get -y dist-upgrade",
-      "sudo apt-get install -y ansible"
+      "sudo apt-get install -y ansible",
+      "sudo bash -c 'cd /srv/ansible; ansible-galaxy install -r requirements.yml; ansible-playbook -i inventory/localhost bastion.yml'"
     ]
     connection {
       type        = "ssh"
@@ -82,29 +89,12 @@ resource "aws_instance" "bastion" {
 }
 
 resource "aws_eip" "bastion" {
-  instance = "${aws_instance.bastion.id}"
+  count    = "${var.instance_count}"
+  instance = "${element(aws_instance.bastion.*.id, count.index)}"
   vpc      = true
 }
 
-resource "null_resource" "bastion_provisioning" {
-  depends_on = ["aws_instance.bastion", "aws_eip.bastion"]
-  triggers {
-    always = "${uuid()}"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "sudo bash -c 'cd /srv/ansible; ansible-galaxy install -r requirements.yml; ansible-playbook -i inventory/localhost bastion.yml'"
-    ]
-    connection {
-      host        = "${aws_eip.bastion.public_ip}"
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = "${file(format("../../.keys/%s", var.key_name))}"
-    }
-  }
-}
-
-// Bastion external IP address.
-output "external_ip" {
-  value = "${aws_eip.bastion.public_ip}"
+// Bastion external IP addresses.
+output "external_ips" {
+  value = ["${aws_eip.bastion.*.public_ip}"]
 }

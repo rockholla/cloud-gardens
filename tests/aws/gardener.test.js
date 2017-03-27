@@ -1,10 +1,10 @@
 'use strict';
 
-var path    = require('path');
-var chai    = require('chai');
-var expect  = chai.expect; // we are using the "expect" style of Chai
-var mockery = require('mockery');
-var awsMock = {};
+var path        = require('path');
+var chai        = require('chai');
+var expect      = chai.expect; // we are using the "expect" style of Chai
+var mockery     = require('mockery');
+var awsMock     = {};
 
 function getAwsGardner(awsMock) {
     mockery.registerMock('aws-sdk', awsMock);
@@ -33,7 +33,32 @@ describe('Aws.Gardener', function() {
         };
     });
 
-    it('createKey should tell us that the key already exists if it does w/o an error', function() {
+    afterEach(function() {
+        mockery.deregisterAll();
+    });
+
+    // TODO: not sure why exactly, but this test needs to be first, something with mockery and the way the mock is set up for Terraform
+    it('terraform() basic plan should succeed', function() {
+        var terraformMock = function(directory) {
+            this.directory = directory;
+            this.init = function() {
+                return 'random init result';
+            };
+            this.execute = function() {
+                return 'random execute result';
+            };
+        };
+        mockery.registerMock(path.join('..', 'terraform'), terraformMock);
+        var gardener = getAwsGardner(awsMock);
+        gardener.terraform('plan', '__tests-bucket', {}).then(function(result) {
+            expect(result).to.equal(true);
+        }).catch(function(error) {
+            expect(error).to.equal(null);
+        });
+
+    });
+
+    it('createKey() should tell us that the key already exists if it does w/o an error', function() {
         awsMock.EC2 = function() {
             this.createKeyPair = function(obj, callback) {
                 callback({message: 'already exists'}, null);
@@ -47,7 +72,7 @@ describe('Aws.Gardener', function() {
         });
     });
 
-    it('createKey should succeeed in creating key', function() {
+    it('createKey() should succeeed in creating key', function() {
         awsMock.EC2 = function() {
             this.createKeyPair = function(obj, callback) {
                 callback(null, { KeyMaterial: '__test-key-material' });
@@ -61,7 +86,7 @@ describe('Aws.Gardener', function() {
         });
     });
 
-    it('createKey should handle error appropriately', function() {
+    it('createKey() should handle error appropriately', function() {
         awsMock.EC2 = function() {
             this.createKeyPair = function(obj, callback) {
                 callback({ message: 'some random error' }, null);
@@ -75,7 +100,7 @@ describe('Aws.Gardener', function() {
         });
     });
 
-    it('getAccountId should succeeed in getting account id', function() {
+    it('getAccountId() should succeeed in getting account id', function() {
         awsMock.STS = function() {
             this.getCallerIdentity = function(obj, callback) {
                 callback(null, { Account: '__test-account-data' });
@@ -89,7 +114,7 @@ describe('Aws.Gardener', function() {
         });
     });
 
-    it('getAccountId should error appropriately', function() {
+    it('getAccountId() should error appropriately', function() {
         awsMock.STS = function() {
             this.getCallerIdentity = function(obj, callback) {
                 callback({ message: 'random error message' }, null);
@@ -103,7 +128,7 @@ describe('Aws.Gardener', function() {
         });
     });
 
-    it('createHostedZone should succeed in creating a hosted zone', function() {
+    it('createHostedZone() should succeed in creating a hosted zone', function() {
         awsMock.Route53 = function() {
             this.listHostedZonesByName = function(obj, callback) {
                 callback(null, { HostedZones: []});
@@ -120,7 +145,7 @@ describe('Aws.Gardener', function() {
         });
     });
 
-    it('createHostedZone should return hosted zone data for zone that already exists', function() {
+    it('createHostedZone() should return hosted zone data for zone that already exists', function() {
         awsMock.Route53 = function() {
             this.listHostedZonesByName = function(obj, callback) {
                 callback(null, { HostedZones: [{ Id: '000000000' }]});
@@ -137,7 +162,7 @@ describe('Aws.Gardener', function() {
         });
     });
 
-    it('createHostedZone should error appropriately from getting existing list', function() {
+    it('createHostedZone() should error appropriately from getting existing list', function() {
         awsMock.Route53 = function() {
             this.listHostedZonesByName = function(obj, callback) {
                 callback({ message: 'random error message' }, null);
@@ -151,7 +176,7 @@ describe('Aws.Gardener', function() {
         });
     });
 
-    it('createHostedZone should error appropriately from creating new hosted zone', function() {
+    it('createHostedZone() should error appropriately from creating new hosted zone', function() {
         awsMock.Route53 = function() {
             this.listHostedZonesByName = function(obj, callback) {
                 callback(null, { HostedZones: []});
@@ -168,7 +193,7 @@ describe('Aws.Gardener', function() {
         });
     });
 
-    it('createHostedZone should error appropriately from getting existing hosted zone', function() {
+    it('createHostedZone() should error appropriately from getting existing hosted zone', function() {
         awsMock.Route53 = function() {
             this.listHostedZonesByName = function(obj, callback) {
                 callback(null, { HostedZones: [{ Id: '000000000' }]});
@@ -184,14 +209,5 @@ describe('Aws.Gardener', function() {
             expect(error.message).to.equal('random error message');
         });
     });
-
-    // TODO: mock aws sdk and terraform to appropriately test this
-    /*it('terraform() plan should return true', function() {
-        this.timeout(15000);
-        var gardener = new Gardens.Aws.Gardener('default', 'us-east-1', '__cloud-gardens-tests');
-        return gardener.terraform('__tests', '__tests-key', 'plan').then(function(result) {
-            expect(result).to.equal(true);
-        });
-    });*/
 
 });

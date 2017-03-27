@@ -93,7 +93,7 @@ resource "null_resource" "bastion_provisioning" {
   }
   provisioner "remote-exec" {
     inline = [
-      "sudo bash -c 'cd /srv/ansible; ansible-playbook -i inventory/localhost bastion.yml'"
+      "sudo bash -c 'cd /srv/ansible; ansible-galaxy install -r requirements.yml; ansible-playbook -i inventory/localhost bastion.yml'"
     ]
     connection {
       host        = "${aws_eip.bastion.public_ip}"

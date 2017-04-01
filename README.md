@@ -2,6 +2,8 @@
 
 *** **NOTE: this repo is currently a work in progress** ***
 
+[![Build Status](https://travis-ci.org/rockholla/cloud-gardens.svg?branch=develop)](https://travis-ci.org/rockholla/cloud-gardens)
+
 Requirements:
 
 There are a few key tenets for growing projects and the infrastructure to support them:

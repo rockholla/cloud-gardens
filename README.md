@@ -24,10 +24,13 @@ Some requirements:
 1. [Nodejs](https://nodejs.org)
 2. [Terraform](https://www.terraform.io/intro/getting-started/install.html)
 3. [Ansible](http://docs.ansible.com/ansible/intro_installation.html)
+4. [Create a local named AWS profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-multiple-profiles)
 
 Then run `node . help` to see the available commands.
 
-If you'd like to use your own configuration for building and maintaining, feel free to make a new file named `local.js` or `local.json` in the `/config` directory.  Refer to the [npm config package](https://www.npmjs.com/package/config) for more options on config overriding.
+If you'd like to use your own configuration, run `node . init [name of your configuration]`.
+
+Or you can simply make a new file named `local.js` or `local.json` in the `/config` directory based on `/config/default.json`.  Refer to the [npm config package](https://www.npmjs.com/package/config) for more options on config overriding.
 
 # Diagram of a garden
 

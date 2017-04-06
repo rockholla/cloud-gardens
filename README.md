@@ -32,7 +32,7 @@ You'll want to create your own configuration, and you can do so by running `node
 
 Or you can simply make a new file named `local.js` or `local.json` in the `/config` directory based on `/config/default.json`.  Refer to the [npm config package](https://www.npmjs.com/package/config) for more options on config overriding.
 
-# Diagram of a garden
+# WIP: Some diagrams illustrating the intention here...
 
 A garden is an encapsulated ecosystem containing any number of isolated environments (dev, test, production, etc.), and integration tools and services for controlling these environments.  A garden is capable of serving many environments for many projects.
 

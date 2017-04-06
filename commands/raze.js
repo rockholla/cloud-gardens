@@ -16,13 +16,15 @@ exports.handler = function(argv) {
         return winston.error(error);
     }
     inquirer.prompt([{
-        name: "confirmed",
-        message: "Are you sure you want to completely destroy the garden named '" + argv.garden + "'?",
-        type: "confirm"
+        name: "confirmation",
+        message: "DANGER!!! you are about to completely destroy the '" + argv.garden + "' garden.  Please type in the name of the garden to confirm that this is what you actually want to do.",
+        type: "input"
     }]).then(function(answer) {
-        if (answer.confirmed) {
+        if (answer.confirmation == argv.garden) {
             if (argv.cloud == 'aws') exports.awsHandler(argv);
             else if (argv.cloud == 'digitalocean') exports.digitaloceanHandler(argv);
+        } else {
+            winston.info("OK, not razing the garden");
         }
     });
 }

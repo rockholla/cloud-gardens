@@ -1,0 +1,13 @@
+---
+bastion_services_username: bastion
+bastion_services_password: bastion
+
+traefik_dashboard_port: 9000
+
+jenkins_hostname: "localhost"
+jenkins_http_port: 8080
+jenkins_url_prefix: "/"
+jenkins_connection_delay: 5
+jenkins_connection_retries: 60
+jenkins_plugins:
+  - github

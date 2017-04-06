@@ -1,4 +1,11 @@
 ---
+
+- name: Encrypt the dashboard user password
+  command: >
+    python -c 'import bcrypt; print(bcrypt.hashpw("{{ traefik_dashboard_password }}", bcrypt.gensalt(prefix=b"2a")))'
+  register: traefik_dashboard_password_bcrypt
+  changed_when: false
+
 - name: Create traefik systemd unit
   template:
     src: "{{ traefik_systemd_unit_template }}.j2"
@@ -7,15 +14,18 @@
     group: root
     mode: 0644
   notify:
-    - Reload systemd daemon
-    - Restart traefik
+    - reload systemd daemon
+    - restart traefik
 
 - name: Ensure install & config directory exists
   file:
-    path: "{{ item }}"
+    path: "{{ traefik_install_dir }}"
     state: directory
-  with_items:
-    - "{{ traefik_install_dir }}"
+
+- name: Ensure traefik logs directory exists
+  file:
+    path: "{{ traefik_logs_directory }}"
+    state: directory
 
 - name: Download Traefik binary
   get_url:
@@ -36,7 +46,7 @@
     group: root
     mode: 0744
   notify:
-    - Restart traefik
+    - restart traefik
 
 - name: Ensure traefik service is enabled and running
   service:

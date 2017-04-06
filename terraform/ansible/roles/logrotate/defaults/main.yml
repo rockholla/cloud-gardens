@@ -1,0 +1,4 @@
+---
+logrotate_directories: []
+logrotate_frequency: hourly
+logrotate_maxage: 30 # days

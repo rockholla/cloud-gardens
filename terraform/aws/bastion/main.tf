@@ -4,7 +4,15 @@
  */
 
 variable "garden" {
-  description = "The garden name"
+  description = "the garden name"
+}
+
+variable "domain" {
+  description = "the top level domain name"
+}
+
+variable "hosted_zone_id" {
+  description = "the AWS Route53 hosted zone ID"
 }
 
 variable "instance_type" {
@@ -29,11 +37,19 @@ variable "vpc_id" {
 }
 
 variable "key_name" {
-  description = "The SSH key pair name"
+  description = "the SSH key pair name"
 }
 
 variable "subnet_id" {
-  description = "A external subnet id"
+  description = "an external subnet id"
+}
+
+variable "aws_admin_id" {
+  description = "the AWS admin user access key id"
+}
+
+variable "aws_admin_secret" {
+  description = "the AWS admin user secret access key"
 }
 
 module "ami" {
@@ -53,7 +69,6 @@ resource "aws_instance" "bastion" {
   key_name               = "${var.key_name}"
   vpc_security_group_ids = ["${split(",",var.security_groups)}"]
   monitoring             = true
-  user_data              = "${file(format("%s/user_data.sh", path.module))}"
 
   tags {
     Name    = "${var.garden}-bastion-${count.index + 1}"
@@ -70,15 +85,25 @@ resource "aws_instance" "bastion" {
     }
   }
 
+  provisioner "file" {
+    content = <<EOF
+aws_access_key_id: ${var.aws_admin_id}
+aws_secret_access_key: ${var.aws_admin_secret}
+EOF
+    destination = "/home/ubuntu/ansible/vars/overrides/aws.yml"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file(format("../../.keys/%s", var.key_name))}"
+    }
+  }
+
   provisioner "remote-exec" {
     inline = [
       "sudo mv /home/ubuntu/ansible /srv/ansible",
       "until [ -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done",
-      "sudo apt-add-repository -y ppa:ansible/ansible",
-      "sudo apt-get update",
-      "sudo apt-get -y dist-upgrade",
-      "sudo apt-get install -y ansible",
-      "sudo bash -c 'cd /srv/ansible; ansible-galaxy install -r requirements.yml; ansible-playbook -i inventory/localhost bastion.yml'"
+      "sudo chmod +x /srv/ansible/provision.sh",
+      "sudo /srv/ansible/provision.sh bastion.yml"
     ]
     connection {
       type        = "ssh"
@@ -94,7 +119,31 @@ resource "aws_eip" "bastion" {
   vpc      = true
 }
 
+resource "aws_route53_record" "garden" {
+  zone_id = "${var.hosted_zone_id}"
+  name    = "${var.garden}.${var.domain}"
+  type    = "A"
+  ttl     = "300"
+  records = ["${aws_eip.bastion.*.public_ip}"]
+}
+
+resource "aws_route53_record" "jenkins" {
+  zone_id = "${var.hosted_zone_id}"
+  name    = "jenkins.${var.domain}"
+  type    = "A"
+  ttl     = "300"
+  records = ["${aws_eip.bastion.*.public_ip}"]
+}
+
 // Bastion external IP addresses.
 output "external_ips" {
   value = ["${aws_eip.bastion.*.public_ip}"]
+}
+
+output "garden_fqdn" {
+  value = "${aws_route53_record.garden.fqdn}"
+}
+
+output "jenkins_fqdn" {
+  value = "${aws_route53_record.jenkins.fqdn}"
 }

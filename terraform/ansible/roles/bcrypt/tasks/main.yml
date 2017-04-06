@@ -1,0 +1,15 @@
+---
+- name: Ensure bcrypt is installed
+  apt:
+    name: bcrypt
+    state: installed
+
+- name: Ensure pip is installed
+  easy_install:
+    name: pip
+    state: present
+
+- name: Ensure python bcrypt package is installed
+  pip:
+    name: bcrypt
+    state: present

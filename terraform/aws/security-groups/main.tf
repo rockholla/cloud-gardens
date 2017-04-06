@@ -3,20 +3,20 @@
  */
 
 variable "vpc_id" {
-  description = "The VPC ID"
+  description = "the VPC ID"
 }
 
 variable "garden" {
-  description = "The name of the garden"
+  description = "the name of the garden"
 }
 
 variable "cidr" {
-  description = "The cidr block to use for internal security groups"
+  description = "the cidr block to use for internal security groups"
 }
 
 resource "aws_security_group" "bastion" {
   name        = "${format("%s-bastion", var.garden)}"
-  description = "Allows ssh from the world"
+  description = "Allows access to the bastion server services from anywhere"
   vpc_id      = "${var.vpc_id}"
 
   ingress {
@@ -27,8 +27,22 @@ resource "aws_security_group" "bastion" {
   }
 
   ingress {
-    from_port   = 8080
-    to_port     = 8080
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 9000
+    to_port     = 9000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

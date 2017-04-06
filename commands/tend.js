@@ -1,13 +1,34 @@
 'use strict';
 
 var path            = require('path');
+var fs              = require('fs');
 var Gardens         = require(path.join('..', 'lib'));
 var winston         = require('winston');
 var afterCreateKey  = require(path.join(__dirname, 'create-key')).callback;
 var config          = require('config');
+var yamljs          = require('yamljs');
 
 exports.command = 'tend [garden]';
 exports.desc = 'for starting or maintaining a garden.  A garden is a collection of integration resources and application environments (dev, testing, etc), all in its own cloud ecosystem.';
+
+function writeAnsibleVars(argv) {
+    fs.writeFileSync(
+        path.resolve(__dirname, '..', 'terraform', 'ansible', 'vars', 'overrides', 'main.yml'),
+        yamljs.stringify({
+            garden: argv.garden,
+            domain: config.domain,
+            bastion_services_username: config.bastion.services.username,
+            bastion_services_password: config.bastion.services.password,
+            aws_region: argv.region
+        })
+    );
+};
+
+function removeAnsibleVars() {
+    try {
+        fs.unlinkSync(path.resolve(__dirname, '..', 'terraform', 'ansible', 'vars', 'overrides', 'main.yml'));
+    } catch (error) {}
+}
 
 exports.handler = function(argv) {
     try {
@@ -56,15 +77,18 @@ exports.awsHandler = function(argv) {
         .then(function(result) {
             nameServers     = result.DelegationSet.NameServers;
             hostedZoneId    = result.HostedZone.Id;
+            writeAnsibleVars(argv);
             return gardener.terraform((argv.dryrun ? 'plan' : 'apply'), stateBucket, {
                 'name': argv.garden,
                 'domain': config.domain,
                 'key_name': keyName,
                 'bastion_count': config.bastion.count,
+                'bastion_instance_type': config.bastion.type,
                 'hosted_zone_id': hostedZoneId
             });
         })
         .then(function(result) {
+            removeAnsibleVars();
             winston.info("Done tending the garden");
             winston.info("Name servers:");
             nameServers.forEach(function(nameServer) {
@@ -74,6 +98,7 @@ exports.awsHandler = function(argv) {
         })
         .catch(function(error) {
             winston.error(error);
+            removeAnsibleVars();
             process.exit(1);
         });
 

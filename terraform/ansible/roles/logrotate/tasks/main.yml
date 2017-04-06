@@ -1,0 +1,28 @@
+---
+- name: Install logrotate
+  apt:
+    name: logrotate
+    state: installed
+
+- name: Ensure proper logrotate configuration for directories
+  blockinfile:
+    dest: "/etc/logrotate.d/{{ item.name }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+    block: |
+      {{ item.path }}/*.log {
+        {{ logrotate_frequency }}
+        missingok
+        notifempty
+        create 0640 {{ item.owner }} adm
+        maxage {{ logrotate_maxage }}
+        prerotate
+                if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+                        run-parts /etc/logrotate.d/httpd-prerotate; \
+                fi \
+        endscript
+        postrotate
+                [ -s /run/nginx.pid ] && kill -USR1 `cat /run/nginx.pid`
+        endscript
+      }
+    state: present
+  with_items: "{{ logrotate_directories }}"

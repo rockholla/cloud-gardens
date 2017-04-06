@@ -19,6 +19,11 @@
         "profile": "default"
     },
     "bastion": {
-        "count": 1
+        "count": 1,
+        "type": "t2.micro",
+        "services": {
+            "username": "bastion",
+            "password": "bastion"
+        }
     }
 }

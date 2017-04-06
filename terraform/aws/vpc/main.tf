@@ -1,21 +1,21 @@
 variable "garden" {
-  description = "The name of the garden"
+  description = "the name of the garden"
 }
 
 variable "cidr" {
-  description = "The CIDR block for the VPC."
+  description = "the CIDR block for the VPC."
 }
 
 variable "external_subnet_pattern" {
-  description = "Pattern to use for external subnet addressing"
+  description = "patter to use for external subnet addressing"
 }
 
 variable "internal_subnet_pattern" {
-  description = "Pattern to use for internal subnet addressing"
+  description = "pattern to use for internal subnet addressing"
 }
 
 variable "availability_zones" {
-  description = "List of availability zones"
+  description = "list of availability zones"
   type        = "list"
 }
 

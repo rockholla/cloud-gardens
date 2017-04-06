@@ -1,0 +1,2 @@
+---
+letsencrypt_domains_command: "-d localhost"

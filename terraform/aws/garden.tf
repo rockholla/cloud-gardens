@@ -11,7 +11,7 @@ terraform {
 }
 
 variable "profile" {
-  description = "The AWS profile to use"
+  description = "the AWS profile to use"
 }
 
 variable "region" {
@@ -28,11 +28,11 @@ variable "name" {
 }
 
 variable "domain" {
-  description = "The base domain name to use (top and second level e.g. \"gardens.local\")"
+  description = "the base domain name to use (top and second level e.g. \"gardens.local\")"
 }
 
 variable "hosted_zone_id" {
-  description = "The Hosted Zone ID"
+  description = "the AWS Route53 hosted zone ID"
 }
 
 variable "key_name" {
@@ -60,7 +60,7 @@ variable "bastion_count" {
 }
 
 variable "bastion_instance_type" {
-  description = "Instance type for the bastion"
+  description = "the instance type for the bastion"
   default = "t2.micro"
 }
 
@@ -109,36 +109,41 @@ variable "ecs_docker_volume_size" {
 }
 
 variable "ecs_docker_auth_type" {
-  description = "The docker auth type, see https://godoc.org/github.com/aws/amazon-ecs-agent/agent/engine/dockerauth for the possible values"
+  description = "the docker auth type, see https://godoc.org/github.com/aws/amazon-ecs-agent/agent/engine/dockerauth for the possible values"
   default     = ""
 }
 
 variable "ecs_docker_auth_data" {
-  description = "A JSON object providing the docker auth data, see https://godoc.org/github.com/aws/amazon-ecs-agent/agent/engine/dockerauth for the supported formats"
+  description = "a JSON object providing the docker auth data, see https://godoc.org/github.com/aws/amazon-ecs-agent/agent/engine/dockerauth for the supported formats"
   default     = ""
 }
 
 variable "ecs_security_groups" {
-  description = "A comma separated list of security groups from which ingest traffic will be allowed on the ECS cluster, it defaults to allowing ingress traffic on port 22 and coming grom the ELBs"
+  description = "a comma separated list of security groups from which ingest traffic will be allowed on the ECS cluster, it defaults to allowing ingress traffic on port 22 and coming grom the ELBs"
   default     = ""
 }
 
 variable "ecs_ami" {
-  description = "The AMI that will be used to launch EC2 instances in the ECS cluster"
+  description = "the AMI that will be used to launch EC2 instances in the ECS cluster"
   default     = ""
 }
 
 variable "extra_cloud_config_type" {
-  description = "Extra cloud config type"
+  description = "extra cloud config type"
   default     = "text/cloud-config"
 }
 
 variable "extra_cloud_config_content" {
-  description = "Extra cloud config content"
+  description = "extra cloud config content"
   default     = ""
 }
 
 data "aws_availability_zones" "available" {}
+
+module "iam" {
+  source  = "./iam"
+  garden  = "${var.name}"
+}
 
 module "vpc" {
   source                  = "./vpc"
@@ -157,23 +162,19 @@ module "security_groups" {
 }
 
 module "bastion" {
-  source          = "./bastion"
-  garden          = "${var.name}"
-  region          = "${var.region}"
-  instance_type   = "${var.bastion_instance_type}"
-  instance_count  = "${var.bastion_count}"
-  security_groups = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
-  vpc_id          = "${module.vpc.id}"
-  subnet_id       = "${element(module.vpc.external_subnets, 0)}"
-  key_name        = "${var.key_name}"
-}
-
-resource "aws_route53_record" "bastion" {
-  zone_id = "${var.hosted_zone_id}"
-  name    = "bastion.${var.domain}"
-  type    = "A"
-  ttl     = "300"
-  records = ["${module.bastion.external_ips}"]
+  source            = "./bastion"
+  garden            = "${var.name}"
+  domain            = "${var.domain}"
+  region            = "${var.region}"
+  hosted_zone_id    = "${var.hosted_zone_id}"
+  instance_type     = "${var.bastion_instance_type}"
+  instance_count    = "${var.bastion_count}"
+  security_groups   = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
+  vpc_id            = "${module.vpc.id}"
+  subnet_id         = "${element(module.vpc.external_subnets, 0)}"
+  key_name          = "${var.key_name}"
+  aws_admin_id      = "${module.iam.admin_user_id}"
+  aws_admin_secret  = "${module.iam.admin_user_secret}"
 }
 
 // The region in which the infra lives.
@@ -184,6 +185,16 @@ output "region" {
 // The bastion host IPs.
 output "bastion_ips" {
   value = ["${module.bastion.external_ips}"]
+}
+
+// The general garden fqdns
+output "garden_fqdn" {
+  value = ["${module.bastion.garden_fqdn}"]
+}
+
+// The jenkins fqdn
+output "jenkins_fqdn" {
+  value = ["${module.bastion.jenkins_fqdn}"]
 }
 
 // Comma separated list of internal subnet IDs.

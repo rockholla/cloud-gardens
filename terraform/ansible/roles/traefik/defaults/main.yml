@@ -1,8 +1,16 @@
 ---
-traefik_install_dir: /usr/bin
-traefik_binary_url: https://github.com/containous/traefik/releases/download/v1.2.0/traefik_linux-amd64
+traefik_version: "v1.2.1"
+traefik_domain: "localhost"
+traefik_dashboard_username: "admin"
+traefik_dashboard_password: "admin"
+traefik_dashboard_port: 9000
+traefik_install_dir: /opt/traefik
+traefik_binary_url: "https://github.com/containous/traefik/releases/download/{{ traefik_version }}/traefik_linux-amd64"
 traefik_bin_path: "{{ traefik_install_dir }}/traefik"
 traefik_config_file: /etc/traefik.toml
 traefik_template: traefik.toml
 traefik_systemd_unit_template: traefik.service
 traefik_systemd_unit_dest: /etc/systemd/system/traefik.service
+traefik_debug: "false"
+traefik_log_level: "INFO"
+traefik_logs_directory: /var/log/traefik

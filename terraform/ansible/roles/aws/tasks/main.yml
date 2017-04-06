@@ -1,0 +1,45 @@
+---
+
+- name: Ensure pip is installed
+  easy_install:
+    name: pip
+    state: present
+
+- name: Ensure aws command line tools are installed
+  pip:
+    name: awscli
+    state: present
+
+- name: Ensure AWS config directories exist
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    mode: 0644
+  with_items: "{{ aws_config_directories }}"
+
+- name: Write profile configs
+  blockinfile:
+    create: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK default"
+    dest: "{{ item.path }}/config"
+    owner: "{{ item.owner }}"
+    mode: 0600
+    block: |
+      [default]
+      output = json
+      region = {{ aws_region }}
+  with_items: "{{ aws_config_directories }}"
+
+- name: Write profile credentials
+  blockinfile:
+    create: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK default"
+    dest: "{{ item.path }}/credentials"
+    owner: "{{ item.owner }}"
+    mode: 0600
+    block: |
+      [default]
+      aws_access_key_id = {{ aws_access_key_id }}
+      aws_secret_access_key = {{ aws_secret_access_key }}
+  with_items: "{{ aws_config_directories }}"

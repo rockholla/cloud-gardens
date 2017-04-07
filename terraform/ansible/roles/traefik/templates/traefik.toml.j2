@@ -24,10 +24,10 @@ defaultEntryPoints = ["http", "https"]
       KeyFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/privkey.pem"
 
 [web]
-address = ":{{ traefik_lab_port }}"
+address = ":{{ traefik_status_port }}"
 
 [web.auth.basic]
-users = ["{{ traefik_lab_username }}:{{ traefik_lab_password_bcrypt.stdout }}"]
+users = ["{{ traefik_status_username }}:{{ traefik_status_password_bcrypt.stdout }}"]
 
 [file]
 
@@ -37,18 +37,18 @@ users = ["{{ traefik_lab_username }}:{{ traefik_lab_password_bcrypt.stdout }}"]
   backend = "ci"
     [frontends.ci.routes.test_1]
     rule = "Host: {{ traefik_ci_subdomain }}.{{ traefik_hostname }}"
-  [frontends.lab]
+  [frontends.status]
   passHostHeader = true
-  backend = "lab"
-    [frontends.lab.routes.test_1]
-    rule = "Host: {{ traefik_lab_subdomain }}.{{ traefik_hostname }}"
+  backend = "status"
+    [frontends.status.routes.test_1]
+    rule = "Host: {{ traefik_status_subdomain }}.{{ traefik_hostname }}"
 
 [backends]
   [backends.ci]
     [backends.ci.servers.server1]
     url = "http://127.0.0.1:{{ traefik_ci_port }}"
     weight = 1
-  [backends.lab]
-    [backends.lab.servers.server1]
-    url = "http://127.0.0.1:{{ traefik_lab_port }}"
+  [backends.status]
+    [backends.status.servers.server1]
+    url = "http://127.0.0.1:{{ traefik_status_port }}"
     weight = 1

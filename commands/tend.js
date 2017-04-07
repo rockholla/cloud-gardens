@@ -72,7 +72,7 @@ exports.awsHandler = function(argv) {
                 'bastion_instance_type': config.bastion.type,
                 'hosted_zone_id': result.hostedZoneId,
                 'ci_subdomain': config.bastion.subdomains.ci,
-                'lab_subdomain': config.bastion.subdomains.lab
+                'status_subdomain': config.bastion.subdomains.status
             });
         }).then(function(result) {
             removeAnsibleVars();

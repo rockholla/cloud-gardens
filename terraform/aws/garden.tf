@@ -36,9 +36,9 @@ variable "ci_subdomain" {
   default = "ci"
 }
 
-variable "lab_subdomain" {
-  description = "the subdomain to use for the lab server URL"
-  default = "lab"
+variable "status_subdomain" {
+  description = "the subdomain to use for the status server URL"
+  default = "status"
 }
 
 variable "hosted_zone_id" {
@@ -176,7 +176,7 @@ module "bastion" {
   garden            = "${var.name}"
   domain            = "${var.domain}"
   ci_subdomain      = "${var.ci_subdomain}"
-  lab_subdomain     = "${var.lab_subdomain}"
+  status_subdomain  = "${var.status_subdomain}"
   region            = "${var.region}"
   hosted_zone_id    = "${var.hosted_zone_id}"
   instance_type     = "${var.bastion_instance_type}"
@@ -199,9 +199,9 @@ output "bastion_ips" {
   value = ["${module.bastion.external_ips}"]
 }
 
-// The URL of the lab, the control center for the garden
-output "lab_url" {
-  value = ["${module.bastion.lab_url}"]
+// The URL of the status, the control center for the garden
+output "status_url" {
+  value = ["${module.bastion.status_url}"]
 }
 
 // The CI server URL

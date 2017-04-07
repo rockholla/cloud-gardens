@@ -56,8 +56,8 @@ variable "ci_subdomain" {
   description = "the subdomain to use for the CI server URL"
 }
 
-variable "lab_subdomain" {
-  description = "the subdomain to use for the lab server URL"
+variable "status_subdomain" {
+  description = "the subdomain to use for the status server URL"
 }
 
 module "ami" {
@@ -98,7 +98,7 @@ resource "aws_instance" "bastion" {
 aws_access_key_id: ${var.aws_admin_id}
 aws_secret_access_key: ${var.aws_admin_secret}
 traefik_ci_subdomain: ${var.ci_subdomain}
-traefik_lab_subdomain: ${var.lab_subdomain}
+traefik_status_subdomain: ${var.status_subdomain}
 aws_config_directories:
   - { path: /home/ubuntu/.aws, owner: ubuntu }
   - { path: /root/.aws, owner: root }
@@ -140,9 +140,9 @@ resource "aws_route53_record" "ci" {
   records = ["${aws_eip.bastion.*.public_ip}"]
 }
 
-resource "aws_route53_record" "lab" {
+resource "aws_route53_record" "status" {
   zone_id = "${var.hosted_zone_id}"
-  name    = "${var.lab_subdomain}.${var.domain}"
+  name    = "${var.status_subdomain}.${var.domain}"
   type    = "A"
   ttl     = "300"
   records = ["${aws_eip.bastion.*.public_ip}"]
@@ -156,6 +156,6 @@ output "ci_url" {
   value = "https://${aws_route53_record.ci.fqdn}"
 }
 
-output "lab_url" {
-  value = "https://${aws_route53_record.lab.fqdn}"
+output "status_url" {
+  value = "https://${aws_route53_record.status.fqdn}"
 }

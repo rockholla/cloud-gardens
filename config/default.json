@@ -27,7 +27,7 @@
         },
         "subdomains": {
             "ci": "ci",
-            "lab": "lab"
+            "status": "status"
         }
     }
 }

@@ -12,7 +12,7 @@ jenkins_connection_retries: 60
 jenkins_plugins:
   - github
 
-traefik_lab_port: 9000
+traefik_status_port: 9000
 traefik_ci_port: "{{ jenkins_http_port }}"
-traefik_lab_username: "{{ bastion_services_username }}"
-traefik_lab_password: "{{ bastion_services_password }}"
+traefik_status_username: "{{ bastion_services_username }}"
+traefik_status_password: "{{ bastion_services_password }}"

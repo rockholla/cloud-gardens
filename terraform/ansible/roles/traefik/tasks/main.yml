@@ -1,9 +1,9 @@
 ---
 
-- name: Encrypt the lab user password
+- name: Encrypt the status user password
   command: >
-    python -c 'import bcrypt; print(bcrypt.hashpw("{{ traefik_lab_password }}", bcrypt.gensalt(prefix=b"2a")))'
-  register: traefik_lab_password_bcrypt
+    python -c 'import bcrypt; print(bcrypt.hashpw("{{ traefik_status_password }}", bcrypt.gensalt(prefix=b"2a")))'
+  register: traefik_status_password_bcrypt
   changed_when: false
 
 - name: Create traefik systemd unit

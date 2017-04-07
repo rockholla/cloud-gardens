@@ -49,7 +49,7 @@ exports.awsHandler = function(argv) {
                 'key_name': argv.garden + gardener.keyNameSuffix,
                 'hosted_zone_id': result.hostedZoneId,
                 'ci_subdomain': config.bastion.subdomains.ci,
-                'lab_subdomain': config.bastion.subdomains.lab
+                'status_subdomain': config.bastion.subdomains.status
             });
         }).then(function(result) {
             winston.info("Done razing the garden");

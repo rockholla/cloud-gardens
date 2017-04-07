@@ -17,7 +17,7 @@ There are a few key tenets for growing projects and the infrastructure to suppor
 
 # How to be a Gardener
 
-A Gardener oversees the creation and maintenance of gardens.  It's pretty easy to do as long as you have access to an AWS or DigitalOcean account where you'd like the garden to live.
+A Gardener oversees the creation and maintenance of gardens.  It's pretty easy to do as long as you have access to an AWS (or DigitalOcean supported soon) account where you'd like the garden to live.
 
 Some requirements:
 

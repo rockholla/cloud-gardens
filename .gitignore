@@ -6,3 +6,5 @@ logs/*
 !logs/.keep
 config/*
 !config/default.json
+.graphs/*
+!.graphs/.keep

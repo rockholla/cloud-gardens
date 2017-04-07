@@ -23,6 +23,7 @@ exports.awsHandler = function(argv) {
 
     var gardener    = new Gardens.Aws.Gardener(argv.profile, argv.region);
     var stateBucket = null;
+    var graphLoc    = null;
 
     try {
         Gardens.Aws.validateArgs(argv);
@@ -35,9 +36,10 @@ exports.awsHandler = function(argv) {
             stateBucket = result.stateBucket;
             return gardener.terraform('output', stateBucket, { name: argv.garden });
         }).then(function(result) {
-            return gardener.terraform('graph', stateBucket, { name: argv.garden });
+            graphLoc = path.resolve(__dirname, '..', '.graphs', argv.garden + '.png');
+            return gardener.terraform('graph | dot -Tpng > ' + graphLoc, stateBucket, { name: argv.garden });
         }).then(function(result) {
-            winston.info('DONE');
+            winston.info('A graph of resources has been saved to ' + graphLoc);
         }).catch(function(error) {
             winston.error(error);
             process.exit(1);

@@ -1,3 +1,4 @@
 vendor
 vars/overrides/*
 !vars/overrides/.keep
+*.retry

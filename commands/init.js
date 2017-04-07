@@ -33,7 +33,7 @@ exports.handler = function(argv) {
             {
                 name: 'domain',
                 type: 'input',
-                message: 'And, what domain name to use?'
+                message: 'And, what domain name to use? (e.g. cloudgardens.io)'
             },
             {
                 name: 'bastion.count',
@@ -61,6 +61,8 @@ exports.handler = function(argv) {
         var file = path.join(__dirname, '..', 'config', argv.name + '.json');
         fs.writeFileSync(file, JSON.stringify(config, null, 4));
         winston.info('Successfully wrote new configuration to ' + file);
+        winston.info('You can change this file at any time to fit your needs, see ' + path.join(__dirname, '..', 'config', 'default.json') + ' for other configuration available to copy over and modify.')
+        winston.info('To start using it, run `node . use ' + argv.name + '`');
     }).catch(function(error) {
         winston.error(error);
         process.exit(1);

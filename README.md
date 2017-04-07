@@ -49,7 +49,7 @@ A garden is an encapsulated ecosystem containing any number of isolated environm
 
 ![Garden Diagram](docs/diagram.jpg)
 
-# An example Workflow
+# An example workflow
 
 Here's what your development and release workflow might look like making use of a garden
 

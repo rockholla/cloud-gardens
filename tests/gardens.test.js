@@ -15,4 +15,16 @@ describe('Gardens', function() {
         expect(Gardens.validateName('12abAB-_C')).to.equal(true);
     });
 
+    it('applyInquirerAnswers() should apply flat list of answers to a nested object appropriately', function() {
+        var result = Gardens.applyInquirerAnswers({
+            'whatever': 'whatever',
+            'com.gardens.one': 'com-gardens-one',
+            'com.cloud': 'com-cloud',
+            'com.gardens.two': 'com-gardens-two'
+        }, {});
+        expect(result.com.cloud).to.equal('com-cloud');
+        expect(result.whatever).to.equal('whatever');
+        expect(result.com.gardens.two).to.equal('com-gardens-two');
+    });
+
 });

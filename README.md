@@ -29,7 +29,7 @@ Then run `node . help` to see the available commands.
 
 You'll want to create your own configuration, and you can do so by running `node . init [name of your configuration]`.
 
-Or you can simply make a new file named `local.js` or `local.json` in the `/config` directory based on `/config/default.json`.  Refer to the [npm config package](https://www.npmjs.com/package/config) for more options on config overriding.
+Or you can simply make a new file named `[name of your configuration].json` in the `/config` directory based on `/config/default.json` and then run `node . use [name of your configuration]`.  Refer to the [npm config package](https://www.npmjs.com/package/config) for more info on how configuration works.
 
 # Developing
 

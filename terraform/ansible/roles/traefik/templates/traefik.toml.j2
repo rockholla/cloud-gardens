@@ -12,35 +12,43 @@ defaultEntryPoints = ["http", "https"]
   [entryPoints.http]
   address = ":80"
     [entryPoints.http.redirect]
-    regex = "^http://(.*)$"
-    replacement = "https://$1"
+    entryPoint = "https"
   [entryPoints.https]
   address = ":443"
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
-      CertFile = "/srv/dehydrated/certs/{{ traefik_domain }}/fullchain.pem"
-      KeyFile = "/srv/dehydrated/certs/{{ traefik_domain }}/privkey.pem"
+      CertFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/fullchain.pem"
+      KeyFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/privkey.pem"
+      [[entryPoints.https.tls.certificates]]
+      CertFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/fullchain.pem"
+      KeyFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/privkey.pem"
 
 [web]
-address = ":{{ traefik_dashboard_port }}"
-CertFile = "/srv/dehydrated/certs/{{ traefik_domain }}/fullchain.pem"
-KeyFile = "/srv/dehydrated/certs/{{ traefik_domain }}/privkey.pem"
+address = ":{{ traefik_lab_port }}"
 
 [web.auth.basic]
-users = ["{{ traefik_dashboard_username }}:{{ traefik_dashboard_password_bcrypt.stdout }}"]
+users = ["{{ traefik_lab_username }}:{{ traefik_lab_password_bcrypt.stdout }}"]
 
 [file]
 
 [frontends]
-  [frontends.jenkins]
+  [frontends.ci]
   passHostHeader = true
-  entrypoints = ["https"]
-  backend = "jenkins"
-    [frontends.jenkins.routes.test_1]
-    rule = "Host: jenkins.{{ traefik_domain }}"
+  backend = "ci"
+    [frontends.ci.routes.test_1]
+    rule = "Host: {{ traefik_ci_subdomain }}.{{ traefik_hostname }}"
+  [frontends.lab]
+  passHostHeader = true
+  backend = "lab"
+    [frontends.lab.routes.test_1]
+    rule = "Host: {{ traefik_lab_subdomain }}.{{ traefik_hostname }}"
 
 [backends]
-  [backends.jenkins]
-    [backends.jenkins.servers.server1]
-    url = "http://127.0.0.1:8080"
+  [backends.ci]
+    [backends.ci.servers.server1]
+    url = "http://127.0.0.1:{{ traefik_ci_port }}"
+    weight = 1
+  [backends.lab]
+    [backends.lab.servers.server1]
+    url = "http://127.0.0.1:{{ traefik_lab_port }}"
     weight = 1

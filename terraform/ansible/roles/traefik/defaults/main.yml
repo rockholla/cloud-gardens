@@ -1,9 +1,12 @@
 ---
 traefik_version: "v1.2.1"
-traefik_domain: "localhost"
-traefik_dashboard_username: "admin"
-traefik_dashboard_password: "admin"
-traefik_dashboard_port: 9000
+traefik_hostname: "localhost"
+traefik_ci_subdomain: "ci"
+traefik_lab_subdomain: "lab"
+traefik_lab_username: "admin"
+traefik_lab_password: "admin"
+traefik_lab_port: 9000
+traefik_ci_port: 8080
 traefik_install_dir: /opt/traefik
 traefik_binary_url: "https://github.com/containous/traefik/releases/download/{{ traefik_version }}/traefik_linux-amd64"
 traefik_bin_path: "{{ traefik_install_dir }}/traefik"

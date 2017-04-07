@@ -3,5 +3,4 @@ aws_region: ""
 aws_access_key_id: ""
 aws_secret_access_key: ""
 aws_config_directories:
-  - { path: "/home/ubuntu/.aws", owner: "ubuntu" }
   - { path: /root/.aws, owner: root }

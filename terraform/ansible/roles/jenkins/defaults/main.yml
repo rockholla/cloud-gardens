@@ -1,5 +1,4 @@
 ---
-jenkins_domain: "localhost"
 jenkins_hostname: "localhost"
 jenkins_http_port: 8080
 jenkins_url_prefix: "/"

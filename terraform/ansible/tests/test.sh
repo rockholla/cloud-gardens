@@ -30,18 +30,18 @@ cleanup () {
 
     # Test Ansible syntax.
     printf ${green}"Checking Ansible playbook syntax...\n"${neutral}
-    docker exec --tty $container_id env TERM=xterm ansible-playbook -i /etc/ansible/cloud-gardens-tests/inventory/localhost /etc/ansible/cloud-gardens-tests/$playbook.yml --syntax-check || cleanup 1
+    docker exec --tty $container_id env TERM=xterm ansible-playbook -i /etc/ansible/cloud-gardens-tests/inventory/localhost /etc/ansible/cloud-gardens-tests/$playbook --syntax-check || cleanup 1
 
     printf "\n"
 
     # Run Ansible playbook.
     printf ${green}"Running full playbook...\n"${neutral}
-    docker exec $container_id env TERM=xterm env ANSIBLE_FORCE_COLOR=1 ansible-playbook -i /etc/ansible/cloud-gardens-tests/inventory/localhost --extra-vars "domain=cloud-gardens.local" /etc/ansible/cloud-gardens-tests/$playbook.yml || cleanup 1
+    docker exec $container_id env TERM=xterm env ANSIBLE_FORCE_COLOR=1 ansible-playbook -i /etc/ansible/cloud-gardens-tests/inventory/localhost /etc/ansible/cloud-gardens-tests/$playbook || cleanup 1
 
     # Run Ansible playbook again (idempotence test).
     printf ${green}"Running playbook again: idempotence test...\n"${neutral}
     idempotence=$(mktemp)
-    docker exec $container_id ansible-playbook -i /etc/ansible/cloud-gardens-tests/inventory/localhost --extra-vars "domain=cloud-gardens.local" /etc/ansible/cloud-gardens-tests/$playbook.yml | tee -a $idempotence
+    docker exec $container_id ansible-playbook -i /etc/ansible/cloud-gardens-tests/inventory/localhost /etc/ansible/cloud-gardens-tests/$playbook | tee -a $idempotence
     tail $idempotence \
       | grep -q 'changed=0.*failed=0' \
       && (printf ${green}'Idempotence test: pass'${neutral}"\n") \

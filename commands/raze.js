@@ -32,7 +32,6 @@ exports.handler = function(argv) {
 exports.awsHandler = function(argv) {
 
     var gardener    = new Gardens.Aws.Gardener(argv.profile, argv.region);
-    var keyName     = argv.garden + gardener.keyNameSuffix;
     var stateBucket = null;
 
     try {
@@ -42,34 +41,24 @@ exports.awsHandler = function(argv) {
     }
 
     winston.info('Razing the garden named "' + argv.garden + '"');
-    winston.info('Getting AWS account ID');
-    gardener.getAccountId()
-        .then(function(result) {
-            winston.info('Ensuring that the state storage bucket exists');
-            stateBucket = result + gardener.stateBucketSuffix
-            return gardener.createS3Bucket(stateBucket);
-        })
-        .then(function(result) {
-            winston.info('Ensuring that our hosted zone exists for the domain');
-            return gardener.createHostedZone(config.domain);
-        })
-        .then(function(result) {
-            return gardener.terraform('destroy', stateBucket, {
+    winston.info('Prepping prior to terraforming');
+    gardener.terraformPrep(config.domain).then(function(result) {
+            return gardener.terraform('destroy', result.stateBucket, {
                 'name': argv.garden,
                 'domain': config.domain,
-                'key_name': keyName,
-                'hosted_zone_id': result.HostedZone.Id
+                'key_name': argv.garden + gardener.keyNameSuffix,
+                'hosted_zone_id': result.hostedZoneId,
+                'ci_subdomain': config.bastion.subdomains.ci,
+                'lab_subdomain': config.bastion.subdomains.lab
             });
-        })
-        .then(function(result) {
+        }).then(function(result) {
             winston.info("Done razing the garden");
             winston.warn("Some resources created during gardening are left intact after a raze:");
             winston.warn("    S3 Bucket: " + stateBucket);
             winston.warn("    EC2 Key Pairs");
             winston.warn("    Route53 Zones");
             winston.warn("You'll need to delete those manually through the AWS console if necessary");
-        })
-        .catch(function(error) {
+        }).catch(function(error) {
             winston.error(error);
             process.exit(1);
         });

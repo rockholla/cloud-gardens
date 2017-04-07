@@ -38,7 +38,7 @@ exports.handler = function(argv) {
             {
                 name: 'bastion.count',
                 type: 'input',
-                message: 'How many bastion servers would you like to run? (bastions are entry points to your infrastructure, the load balancer, jenkins instances, etc.)'
+                message: 'How many bastion servers would you like to run? (bastions are entry points to your infrastructure, the load balancer, CI server instances, etc.)'
             },
             {
                 name: 'bastion.type',

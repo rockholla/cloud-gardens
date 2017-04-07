@@ -42,11 +42,9 @@ exports.handler = function(argv) {
 
 exports.awsHandler = function(argv) {
 
-    var gardener        = new Gardens.Aws.Gardener(argv.profile, argv.region);
-    var keyName         = argv.profile + '-' + argv.garden + gardener.keyNameSuffix;
-    var stateBucket     = null;
-    var nameServers     = null;
-    var hostedZoneId    = null;
+    var gardener    = new Gardens.Aws.Gardener(argv.profile, argv.region);
+    var keyName     = argv.profile + '-' + argv.garden + gardener.keyNameSuffix;
+    var nameServers = [];
 
     try {
         Gardens.Aws.validateArgs(argv);
@@ -55,39 +53,28 @@ exports.awsHandler = function(argv) {
     }
 
     winston.info('Tending all resources for the garden named "' + argv.garden + '"');
-    gardener.createKey(keyName)
-        .then(function(result) {
+    gardener.createKey(keyName).then(function(result) {
             if (result.includes('already exists')) {
                 winston.warn(result);
             } else {
                 afterCreateKey(keyName, result);
             }
-            winston.info('Getting AWS account ID');
-            return gardener.getAccountId();
-        })
-        .then(function(result) {
-            winston.info('Ensuring that the state storage bucket exists');
-            stateBucket = result + gardener.stateBucketSuffix;
-            return gardener.createS3Bucket(stateBucket);
-        })
-        .then(function(result) {
-            winston.info('Ensuring that our hosted zone exists for the domain');
-            return gardener.createHostedZone(config.domain);
-        })
-        .then(function(result) {
-            nameServers     = result.DelegationSet.NameServers;
-            hostedZoneId    = result.HostedZone.Id;
+            winston.info('Prepping prior to terraforming');
+            return gardener.terraformPrep(config.domain);
+        }).then(function(result) {
+            nameServers = result.nameServers;
             writeAnsibleVars(argv);
-            return gardener.terraform((argv.dryrun ? 'plan' : 'apply'), stateBucket, {
+            return gardener.terraform((argv.dryrun ? 'plan' : 'apply'), result.stateBucket, {
                 'name': argv.garden,
                 'domain': config.domain,
                 'key_name': keyName,
                 'bastion_count': config.bastion.count,
                 'bastion_instance_type': config.bastion.type,
-                'hosted_zone_id': hostedZoneId
+                'hosted_zone_id': result.hostedZoneId,
+                'ci_subdomain': config.bastion.subdomains.ci,
+                'lab_subdomain': config.bastion.subdomains.lab
             });
-        })
-        .then(function(result) {
+        }).then(function(result) {
             removeAnsibleVars();
             winston.info("Done tending the garden");
             winston.info("Name servers:");
@@ -95,8 +82,7 @@ exports.awsHandler = function(argv) {
                 winston.info(`    ${nameServer}`);
             });
             winston.info("You should make sure the registrar for the domain '" + config.domain + "' is updated to point to the name servers above.")
-        })
-        .catch(function(error) {
+        }).catch(function(error) {
             winston.error(error);
             removeAnsibleVars();
             process.exit(1);

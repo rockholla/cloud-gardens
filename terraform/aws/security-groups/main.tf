@@ -16,7 +16,7 @@ variable "cidr" {
 
 resource "aws_security_group" "bastion" {
   name        = "${format("%s-bastion", var.garden)}"
-  description = "Allows access to the bastion server services from anywhere"
+  description = "Allows access to the bastion services from anywhere"
   vpc_id      = "${var.vpc_id}"
 
   ingress {
@@ -36,13 +36,6 @@ resource "aws_security_group" "bastion" {
   ingress {
     from_port   = 443
     to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 9000
-    to_port     = 9000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

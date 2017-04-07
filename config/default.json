@@ -24,6 +24,10 @@
         "services": {
             "username": "bastion",
             "password": "bastion"
+        },
+        "subdomains": {
+            "ci": "ci",
+            "lab": "lab"
         }
     }
 }

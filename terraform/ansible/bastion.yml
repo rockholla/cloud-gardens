@@ -16,9 +16,9 @@
   roles:
     - { role: aws }
     - { role: bcrypt }
-    - { role: letsencrypt, letsencrypt_domains_command: "-d {{ domain }} -d {{ garden }}.{{ domain }} -d jenkins.{{ domain }} -d {{ ansible_date_time.epoch }}.{{ domain }}" }
+    - { role: letsencrypt, letsencrypt_domains_command: "-d {{ domain }} -d {{ traefik_ci_subdomain }}.{{ domain }} -d {{ traefik_lab_subdomain }}.{{ domain }} -d {{ ansible_date_time.epoch }}.{{ domain }}" }
     - { role: geerlingguy.jenkins, jenkins_plugins: [] }
-    - { role: jenkins, jenkins_domain: "{{ domain }}", jenkins_admin_username: "{{ bastion_services_username }}", jenkins_admin_password: "{{ bastion_services_password }}" }
+    - { role: jenkins,  }
     - { role: aws, aws_config_directories: [ { path: /var/lib/jenkins/.aws, owner: jenkins } ] }
-    - { role: traefik, traefik_domain: "{{ domain }}", traefik_dashboard_username: "{{ bastion_services_username }}", traefik_dashboard_password: "{{ bastion_services_password }}" }
+    - { role: traefik, traefik_hostname: "{{ domain }}" }
     - { role: logrotate }

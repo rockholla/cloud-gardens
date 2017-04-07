@@ -52,6 +52,14 @@ variable "aws_admin_secret" {
   description = "the AWS admin user secret access key"
 }
 
+variable "ci_subdomain" {
+  description = "the subdomain to use for the CI server URL"
+}
+
+variable "lab_subdomain" {
+  description = "the subdomain to use for the lab server URL"
+}
+
 module "ami" {
   source        = "github.com/terraform-community-modules/tf_aws_ubuntu_ami/ebs"
   region        = "${var.region}"
@@ -89,6 +97,11 @@ resource "aws_instance" "bastion" {
     content = <<EOF
 aws_access_key_id: ${var.aws_admin_id}
 aws_secret_access_key: ${var.aws_admin_secret}
+traefik_ci_subdomain: ${var.ci_subdomain}
+traefik_lab_subdomain: ${var.lab_subdomain}
+aws_config_directories:
+  - { path: /home/ubuntu/.aws, owner: ubuntu }
+  - { path: /root/.aws, owner: root }
 EOF
     destination = "/home/ubuntu/ansible/vars/overrides/aws.yml"
     connection {
@@ -119,31 +132,30 @@ resource "aws_eip" "bastion" {
   vpc      = true
 }
 
-resource "aws_route53_record" "garden" {
+resource "aws_route53_record" "ci" {
   zone_id = "${var.hosted_zone_id}"
-  name    = "${var.garden}.${var.domain}"
+  name    = "${var.ci_subdomain}.${var.domain}"
   type    = "A"
   ttl     = "300"
   records = ["${aws_eip.bastion.*.public_ip}"]
 }
 
-resource "aws_route53_record" "jenkins" {
+resource "aws_route53_record" "lab" {
   zone_id = "${var.hosted_zone_id}"
-  name    = "jenkins.${var.domain}"
+  name    = "${var.lab_subdomain}.${var.domain}"
   type    = "A"
   ttl     = "300"
   records = ["${aws_eip.bastion.*.public_ip}"]
 }
 
-// Bastion external IP addresses.
 output "external_ips" {
   value = ["${aws_eip.bastion.*.public_ip}"]
 }
 
-output "garden_fqdn" {
-  value = "${aws_route53_record.garden.fqdn}"
+output "ci_url" {
+  value = "https://${aws_route53_record.ci.fqdn}"
 }
 
-output "jenkins_fqdn" {
-  value = "${aws_route53_record.jenkins.fqdn}"
+output "lab_url" {
+  value = "https://${aws_route53_record.lab.fqdn}"
 }

@@ -31,6 +31,16 @@ variable "domain" {
   description = "the base domain name to use (top and second level e.g. \"gardens.local\")"
 }
 
+variable "ci_subdomain" {
+  description = "the subdomain to use for the CI server URL"
+  default = "ci"
+}
+
+variable "lab_subdomain" {
+  description = "the subdomain to use for the lab server URL"
+  default = "lab"
+}
+
 variable "hosted_zone_id" {
   description = "the AWS Route53 hosted zone ID"
 }
@@ -165,6 +175,8 @@ module "bastion" {
   source            = "./bastion"
   garden            = "${var.name}"
   domain            = "${var.domain}"
+  ci_subdomain      = "${var.ci_subdomain}"
+  lab_subdomain     = "${var.lab_subdomain}"
   region            = "${var.region}"
   hosted_zone_id    = "${var.hosted_zone_id}"
   instance_type     = "${var.bastion_instance_type}"
@@ -187,14 +199,14 @@ output "bastion_ips" {
   value = ["${module.bastion.external_ips}"]
 }
 
-// The general garden fqdns
-output "garden_fqdn" {
-  value = ["${module.bastion.garden_fqdn}"]
+// The URL of the lab, the control center for the garden
+output "lab_url" {
+  value = ["${module.bastion.lab_url}"]
 }
 
-// The jenkins fqdn
-output "jenkins_fqdn" {
-  value = ["${module.bastion.jenkins_fqdn}"]
+// The CI server URL
+output "ci_url" {
+  value = ["${module.bastion.ci_url}"]
 }
 
 // Comma separated list of internal subnet IDs.

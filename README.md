@@ -23,8 +23,7 @@ Some requirements:
 
 1. [Nodejs](https://nodejs.org)
 2. [Terraform](https://www.terraform.io/intro/getting-started/install.html)
-3. [Ansible](http://docs.ansible.com/ansible/intro_installation.html)
-4. [Create a local named AWS profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-multiple-profiles)
+3. [Create a local named AWS profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-multiple-profiles)
 
 Then run `node . help` to see the available commands.
 

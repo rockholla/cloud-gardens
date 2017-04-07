@@ -7,21 +7,21 @@ var Terraform   = require(path.join('..', '..', 'lib', 'terraform'));
 
 describe('Terraform', function() {
 
-    it('Terraform constructor should set directory', function() {
-        var tf = new Terraform('__tests-directory');
-        expect(tf.directory).to.equal('__tests-directory');
-    });
+  it('Terraform constructor should set directory', function() {
+    var tf = new Terraform('__tests-directory');
+    expect(tf.directory).to.equal('__tests-directory');
+  });
 
-    it('Terraform init should basically work', function() {
-        this.timeout(10000);
-        var tf = new Terraform(__dirname);
-        expect(tf.init('__test-bucket', '__test-key', 'us-east-1', 'pipe').toString()).to.include('Terraform has been successfully initialized!');
-    });
+  it('Terraform init should basically work', function() {
+    this.timeout(10000);
+    var tf = new Terraform(__dirname);
+    expect(tf.init('__test-bucket', '__test-key', 'us-east-1', 'pipe').toString()).to.include('Terraform has been successfully initialized!');
+  });
 
-    it ('Terrform execute should succeed in a basic plan (via execute method)', function() {
-        this.timeout(10000);
-        var tf = new Terraform(__dirname);
-        expect(tf.execute('plan', { one: 1111 }, '', 'pipe').toString()).to.include('No changes. Infrastructure is up-to-date.');
-    });
+  it ('Terrform execute should succeed in a basic plan (via execute method)', function() {
+    this.timeout(10000);
+    var tf = new Terraform(__dirname);
+    expect(tf.execute('plan', { one: 1111 }, '', 'pipe').toString()).to.include('No changes. Infrastructure is up-to-date.');
+  });
 
 });

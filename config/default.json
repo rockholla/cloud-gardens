@@ -1,33 +1,33 @@
 {
-    "config_name": "default",
-    "log": {
-        "level": "info",
-        "colors": {
-            "debug": "blue",
-            "verbose": "green",
-            "info": "white",
-            "warn": "yellow",
-            "error": "red"
-        },
-        "file": true,
-        "console": true
+  "config_name": "default",
+  "log": {
+    "level": "info",
+    "colors": {
+      "debug": "blue",
+      "verbose": "green",
+      "info": "white",
+      "warn": "yellow",
+      "error": "red"
     },
-    "domain": "gardens.local",
-    "cloud": "aws",
-    "aws": {
-        "region": null,
-        "profile": "default"
+    "file": true,
+    "console": true
+  },
+  "domain": "gardens.local",
+  "cloud": "aws",
+  "aws": {
+    "region": null,
+    "profile": "default"
+  },
+  "bastion": {
+    "count": 1,
+    "type": "t2.micro",
+    "services": {
+      "username": "bastion",
+      "password": "bastion"
     },
-    "bastion": {
-        "count": 1,
-        "type": "t2.micro",
-        "services": {
-            "username": "bastion",
-            "password": "bastion"
-        },
-        "subdomains": {
-            "ci": "ci",
-            "status": "status"
-        }
+    "subdomains": {
+      "ci": "ci",
+      "status": "status"
     }
+  }
 }

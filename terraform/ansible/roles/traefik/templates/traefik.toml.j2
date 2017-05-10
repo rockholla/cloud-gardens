@@ -35,12 +35,12 @@ users = ["{{ traefik_status_username }}:{{ traefik_status_password_bcrypt.stdout
   [frontends.ci]
   passHostHeader = true
   backend = "ci"
-    [frontends.ci.routes.test_1]
+    [frontends.ci.routes.ci_1]
     rule = "Host: {{ traefik_ci_subdomain }}.{{ traefik_hostname }}"
   [frontends.status]
   passHostHeader = true
   backend = "status"
-    [frontends.status.routes.test_1]
+    [frontends.status.routes.status_1]
     rule = "Host: {{ traefik_status_subdomain }}.{{ traefik_hostname }}"
 
 [backends]

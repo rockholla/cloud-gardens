@@ -12,7 +12,7 @@ exports.callback = function(name, key) {
   var keyPath = path.resolve(path.join(__dirname, '..', '.keys', name));
   fs.writeFile(keyPath, key, function(err) {
     if (err) return winston.error(err);
-    fs.chmod(keyPath, '0600');
+    fs.chmodSync(keyPath, '0600');
     winston.warn("IMPORTANT: new key has been saved to " + keyPath + ", make sure you put it in a safe place.  You won't be able to recover it.");
   });
 };

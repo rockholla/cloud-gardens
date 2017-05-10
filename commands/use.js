@@ -10,22 +10,28 @@ var path    = require('path');
 
 exports.command = 'use [name]';
 exports.desc = 'use a named configuration for gardening tasks';
-exports.handler = function(argv) {
-  if (!argv.name) return winston.error('Please enter a name for the new configuration');
 
+function deleteExisting() {
   try {
     fs.unlinkSync(path.join(__dirname, '..', 'config', 'local.js'))
   } catch (error) {}
   try {
     fs.unlinkSync(path.join(__dirname, '..', 'config', 'local.json'))
   } catch (error) {}
+}
+
+exports.handler = function(argv) {
+  if (!argv.name) return winston.error('Please enter a name for the new configuration');
+
   if (fs.existsSync(path.join(__dirname, '..', 'config', argv.name + '.js'))) {
+    deleteExisting();
     fs.symlinkSync(
       path.join(__dirname, '..', 'config', argv.name + '.js'),
       path.join(__dirname, '..', 'config', 'local.js')
     );
     winston.info(`Now using config "${argv.name}"`);
   } else if (fs.existsSync(path.join(__dirname, '..', 'config', argv.name + '.json'))) {
+    deleteExisting();
     fs.symlinkSync(
       path.join(__dirname, '..', 'config', argv.name + '.json'),
       path.join(__dirname, '..', 'config', 'local.json')

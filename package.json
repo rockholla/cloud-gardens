@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "plant your projects, help them grow",
   "homepage": "https://github.com/rockholla/cloud-gardens",
+  "engines": {
+    "node": "~7.9"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/rockholla/cloud-gardens"

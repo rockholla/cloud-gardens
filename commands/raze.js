@@ -43,6 +43,7 @@ exports.awsHandler = function(argv) {
   winston.info('Razing the garden named "' + argv.garden + '"');
   winston.info('Prepping prior to terraforming');
   gardener.terraformPrep(config.domain).then(function(result) {
+      stateBucket = result.stateBucket;
       return gardener.terraform('destroy', result.stateBucket, {
         'name': argv.garden,
         'domain': config.domain,
@@ -54,7 +55,7 @@ exports.awsHandler = function(argv) {
     }).then(function(result) {
       winston.info("Done razing the garden");
       winston.warn("Some resources created during gardening are left intact after a raze:");
-      winston.warn("    S3 Bucket: " + stateBucket);
+      winston.warn("    S3 terraform state location: " + stateBucket + '/' + argv.garden);
       winston.warn("    EC2 Key Pairs");
       winston.warn("    Route53 Zones");
       winston.warn("You'll need to delete those manually through the AWS console if necessary");

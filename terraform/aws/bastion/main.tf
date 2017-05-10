@@ -60,17 +60,17 @@ variable "status_subdomain" {
   description = "the subdomain to use for the status server URL"
 }
 
-module "ami" {
-  source        = "github.com/terraform-community-modules/tf_aws_ubuntu_ami/ebs"
-  region        = "${var.region}"
-  distribution  = "xenial"
-  instance_type = "${var.instance_type}"
-  storagetype   = "ebs-ssd"
+data "aws_ami" "bastion_ami" {
+  most_recent = true
+  filter {
+    name    = "name"
+    values  = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+  }
 }
 
 resource "aws_instance" "bastion" {
   count                  = "${var.instance_count}"
-  ami                    = "${module.ami.ami_id}"
+  ami                    = "${data.aws_ami.bastion_ami.id}"
   source_dest_check      = false
   instance_type          = "${var.instance_type}"
   subnet_id              = "${var.subnet_id}"

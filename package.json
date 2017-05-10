@@ -4,7 +4,7 @@
   "description": "plant your projects, help them grow",
   "homepage": "https://github.com/rockholla/cloud-gardens",
   "engines": {
-    "node": "~7.9"
+    "node": "~7"
   },
   "repository": {
     "type": "git",

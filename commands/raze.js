@@ -47,7 +47,7 @@ exports.awsHandler = function(argv) {
       return gardener.terraform('destroy', result.stateBucket, {
         'name': argv.garden,
         'domain': config.domain,
-        'key_name': argv.garden + gardener.keyNameSuffix,
+        'key_name': argv.profile + '-' + argv.garden + gardener.keyNameSuffix,
         'hosted_zone_id': result.hostedZoneId,
         'ci_subdomain': config.bastion.subdomains.ci,
         'status_subdomain': config.bastion.subdomains.status

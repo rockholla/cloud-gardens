@@ -60,17 +60,13 @@ variable "status_subdomain" {
   description = "the subdomain to use for the status server URL"
 }
 
-data "aws_ami" "bastion_ami" {
-  most_recent = true
-  filter {
-    name    = "name"
-    values  = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
-  }
+variable "ami_id" {
+  description = "the AMI ID to use for the bastion instance(s)"
 }
 
 resource "aws_instance" "bastion" {
   count                  = "${var.instance_count}"
-  ami                    = "${data.aws_ami.bastion_ami.id}"
+  ami                    = "${var.ami_id}"
   source_dest_check      = false
   instance_type          = "${var.instance_type}"
   subnet_id              = "${var.subnet_id}"

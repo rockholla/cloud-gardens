@@ -133,6 +133,14 @@ variable "ecs_security_groups" {
   default     = ""
 }
 
+data "aws_ami" "default_ami" {
+  most_recent = true
+  filter {
+    name    = "name"
+    values  = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+  }
+}
+
 variable "ecs_ami" {
   description = "the AMI that will be used to launch EC2 instances in the ECS cluster"
   default     = ""
@@ -183,6 +191,7 @@ module "bastion" {
   instance_count    = "${var.bastion_count}"
   security_groups   = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
   vpc_id            = "${module.vpc.id}"
+  ami_id            = "${data.aws_ami.default_ami.id}"
   subnet_id         = "${element(module.vpc.external_subnets, 0)}"
   key_name          = "${var.key_name}"
   aws_admin_id      = "${module.iam.admin_user_id}"

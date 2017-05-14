@@ -1,12 +1,14 @@
 'use strict';
 
 var path            = require('path');
+var glob            = require('glob');
 var fs              = require('fs');
 var Gardens         = require(path.join('..', 'lib'));
 var winston         = require('winston');
 var afterCreateKey  = require(path.join(__dirname, 'create-key')).callback;
 var config          = require('config');
 var yamljs          = require('yamljs');
+var lnf             = require('lnf');
 
 exports.command = 'tend [garden]';
 exports.desc = 'for starting or maintaining a garden.  A garden is a collection of integration resources and application environments (dev, testing, etc), all in its own cloud ecosystem.';
@@ -35,6 +37,33 @@ exports.handler = function(argv) {
     winston.error("Sorry, only one bastion instance is supported for now, we hope to have support for horizontally scaled bastion instances soon.");
     process.exit(1);
   }
+  if (config.terraform.custom.source == null) {
+    if (!fs.existsSync(path.resolve(__dirname, '..', 'terraform', 'custom'))) {
+      fs.mkdirSync(path.resolve(__dirname, '..', 'terraform', 'custom'));
+    }
+    if (!fs.existsSync(path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name))) {
+      fs.mkdirSync(path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name));
+    }
+    var customtf = glob.sync(path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name, '*.tf'));
+    if (!customtf || !customtf.length || customtf.length == 0) {
+      fs.writeFileSync(
+        path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name, 'main.tf'),
+`// use this terraform file for anything custom you'd like to add
+variable "garden" {
+  description = "the garden name"
+}
+
+variable "domain" {
+  description = "the top level domain name"
+}`
+      );
+    }
+  }
+  lnf.sync(
+    path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name),
+    path.resolve(__dirname, '..', 'terraform', 'custom', 'active')
+  );
+
   try {
     Gardens.validateName(argv.garden);
   } catch (error) {
@@ -76,7 +105,7 @@ exports.awsHandler = function(argv) {
         'bastion_instance_type': config.bastion.type,
         'hosted_zone_id': result.hostedZoneId,
         'ci_subdomain': config.bastion.subdomains.ci,
-        'status_subdomain': config.bastion.subdomains.status
+        'status_subdomain': config.bastion.subdomains.status,
       });
     }).then(function(result) {
       removeAnsibleVars();

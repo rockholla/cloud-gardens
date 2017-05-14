@@ -29,5 +29,10 @@
       "ci": "ci",
       "status": "status"
     }
+  },
+  "terraform": {
+    "custom": {
+      "source": null
+    }
   }
 }

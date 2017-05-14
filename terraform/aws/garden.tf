@@ -198,6 +198,12 @@ module "bastion" {
   aws_admin_secret  = "${module.iam.admin_user_secret}"
 }
 
+module "garden_custom" {
+  source = "../custom/active"
+  garden = "${var.name}"
+  domain = "${var.domain}"
+}
+
 // The region in which the infra lives.
 output "region" {
   value = "${var.region}"

@@ -22,3 +22,6 @@
     - { role: aws, aws_config_directories: [ { path: /var/lib/jenkins/.aws, owner: jenkins } ] }
     - { role: traefik, traefik_hostname: "{{ domain }}" }
     - { role: logrotate }
+
+  tasks:
+    - include: "{{ playbook_dir }}/.custom/bastion.yml"

@@ -5,6 +5,7 @@ var pkgjson = require(path.join(__dirname, 'package.json'));
 var aws     = require('aws-sdk');
 var config  = require('config');
 var winston = require('winston');
+var mkdirp  = require('mkdirp');
 
 winston.setLevels({
   error: 0, warn: 1, info: 2, verbose: 3, debug: 4
@@ -31,8 +32,6 @@ winston.add(winston.transports.File, {
   maxFiles: 10,
   json: false
 });
-
-winston.info(`Using config "${config.config_name}"`);
 
 var argv = require('yargs')
   .usage('Usage: $0 <command> [options]')

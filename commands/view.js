@@ -1,15 +1,25 @@
 'use strict';
 
+var fs          = require('fs');
 var path        = require('path');
 var Gardens     = require(path.join('..', 'lib'));
 var winston     = require('winston');
-var config      = require('config');
+var baseConfig  = require('config');
 var inquirer    = require('inquirer');
+var mkdirp      = require('mkdirp');
+var lnf         = require('lnf');
+var config      = null;
 
 exports.command = 'view [garden]';
 exports.desc = 'for getting a quick look at the state of a garden';
 
 exports.handler = function(argv) {
+  var gardenConfigPath = path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, 'config.json');
+  if (fs.existsSync(gardenConfigPath)) {
+    config = baseConfig.util.extendDeep(baseConfig, JSON.parse(fs.readFileSync(gardenConfigPath)));
+  } else {
+    config = baseConfig;
+  }
   try {
     Gardens.validateName(argv.garden);
   } catch (error) {
@@ -23,7 +33,11 @@ exports.awsHandler = function(argv) {
 
   var gardener    = new Gardens.Aws.Gardener(argv.profile, argv.region);
   var stateBucket = null;
-  var graphLoc    = null;
+  var graphPath   = null;
+  lnf.sync(
+    path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, 'terraform', 'aws'),
+    path.resolve(__dirname, '..', 'terraform', 'aws', '.custom')
+  );
 
   try {
     Gardens.Aws.validateArgs(argv);
@@ -36,10 +50,12 @@ exports.awsHandler = function(argv) {
       stateBucket = result.stateBucket;
       return gardener.terraform('output', stateBucket, { name: argv.garden });
     }).then(function(result) {
-      graphLoc = path.resolve(__dirname, '..', '.graphs', argv.garden + '.png');
-      return gardener.terraform('graph | dot -Tpng > ' + graphLoc, stateBucket, { name: argv.garden });
+      graphPath = path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, '.graphs');
+      mkdirp.sync(graphPath);
+      graphPath = path.join(graphPath, 'all.png');
+      return gardener.terraform('graph | dot -Tpng > ' + graphPath, stateBucket, { name: argv.garden });
     }).then(function(result) {
-      winston.info('A graph of resources has been saved to ' + graphLoc);
+      winston.info('A graph of resources has been saved to ' + graphPath);
     }).catch(function(error) {
       winston.error(error);
       process.exit(1);

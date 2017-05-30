@@ -1,15 +1,24 @@
 'use strict';
 
+var fs          = require('fs');
 var path        = require('path');
 var Gardens     = require(path.join('..', 'lib'));
 var winston     = require('winston');
-var config      = require('config');
+var baseConfig  = require('config');
 var inquirer    = require('inquirer');
+var lnf         = require('lnf');
+var config      = null;
 
 exports.command = 'raze [garden]';
 exports.desc = 'for completely destroying an existing garden.';
 
 exports.handler = function(argv) {
+  var gardenConfigPath = path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, 'config.json');
+  if (fs.existsSync(gardenConfigPath)) {
+    config = baseConfig.util.extendDeep(baseConfig, JSON.parse(fs.readFileSync(gardenConfigPath)));
+  } else {
+    config = baseConfig;
+  }
   try {
     Gardens.validateName(argv.garden);
   } catch (error) {
@@ -33,6 +42,14 @@ exports.awsHandler = function(argv) {
 
   var gardener    = new Gardens.Aws.Gardener(argv.profile, argv.region);
   var stateBucket = null;
+  lnf.sync(
+    path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, 'terraform', 'aws'),
+    path.resolve(__dirname, '..', 'terraform', 'aws', '.custom')
+  );
+  lnf.sync(
+    path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, 'terraform', 'ansible'),
+    path.resolve(__dirname, '..', 'terraform', 'ansible', '.custom')
+  );
 
   try {
     Gardens.Aws.validateArgs(argv);
@@ -47,7 +64,7 @@ exports.awsHandler = function(argv) {
       return gardener.terraform('destroy', result.stateBucket, {
         'name': argv.garden,
         'domain': config.domain,
-        'key_name': argv.profile + '-' + argv.garden + gardener.keyNameSuffix,
+        'key_name': argv.garden + gardener.keyNameSuffix,
         'hosted_zone_id': result.hostedZoneId,
         'ci_subdomain': config.bastion.subdomains.ci,
         'status_subdomain': config.bastion.subdomains.status

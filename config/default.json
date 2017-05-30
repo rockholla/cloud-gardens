@@ -1,5 +1,4 @@
 {
-  "config_name": "default",
   "log": {
     "level": "info",
     "colors": {
@@ -9,7 +8,7 @@
       "warn": "yellow",
       "error": "red"
     },
-    "file": true,
+    "file": false,
     "console": true
   },
   "domain": "gardens.local",
@@ -28,11 +27,6 @@
     "subdomains": {
       "ci": "ci",
       "status": "status"
-    }
-  },
-  "terraform": {
-    "custom": {
-      "source": null
     }
   }
 }

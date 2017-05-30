@@ -6,9 +6,10 @@ var fs              = require('fs');
 var Gardens         = require(path.join('..', 'lib'));
 var winston         = require('winston');
 var afterCreateKey  = require(path.join(__dirname, 'create-key')).callback;
-var config          = require('config');
 var yamljs          = require('yamljs');
 var lnf             = require('lnf');
+var baseConfig      = require('config');
+var config          = null;
 
 exports.command = 'tend [garden]';
 exports.desc = 'for starting or maintaining a garden.  A garden is a collection of integration resources and application environments (dev, testing, etc), all in its own cloud ecosystem.';
@@ -33,37 +34,17 @@ function removeAnsibleVars() {
 }
 
 exports.handler = function(argv) {
+  var gardenConfigPath = path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, 'config.json');
+  if (fs.existsSync(gardenConfigPath)) {
+    config = baseConfig.util.extendDeep(baseConfig, JSON.parse(fs.readFileSync(gardenConfigPath)));
+  } else {
+    config = baseConfig;
+  }
+
   if (config.bastion.count > 1) {
     winston.error("Sorry, only one bastion instance is supported for now, we hope to have support for horizontally scaled bastion instances soon.");
     process.exit(1);
   }
-  if (config.terraform.custom.source == null) {
-    if (!fs.existsSync(path.resolve(__dirname, '..', 'terraform', 'custom'))) {
-      fs.mkdirSync(path.resolve(__dirname, '..', 'terraform', 'custom'));
-    }
-    if (!fs.existsSync(path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name))) {
-      fs.mkdirSync(path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name));
-    }
-    var customtf = glob.sync(path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name, '*.tf'));
-    if (!customtf || !customtf.length || customtf.length == 0) {
-      fs.writeFileSync(
-        path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name, 'main.tf'),
-`// use this terraform file for anything custom you'd like to add
-variable "garden" {
-  description = "the garden name"
-}
-
-variable "domain" {
-  description = "the top level domain name"
-}`
-      );
-    }
-  }
-  lnf.sync(
-    path.resolve(__dirname, '..', 'terraform', 'custom', config.config_name),
-    path.resolve(__dirname, '..', 'terraform', 'custom', 'active')
-  );
-
   try {
     Gardens.validateName(argv.garden);
   } catch (error) {
@@ -75,9 +56,17 @@ variable "domain" {
 
 exports.awsHandler = function(argv) {
 
-  var gardener    = new Gardens.Aws.Gardener(argv.profile, argv.region);
-  var keyName     = argv.profile + '-' + argv.garden + gardener.keyNameSuffix;
-  var nameServers = [];
+  var gardener      = new Gardens.Aws.Gardener(argv.profile, argv.region);
+  var keyName       = null;
+  var nameServers   = [];
+  lnf.sync(
+    path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, 'terraform', 'aws'),
+    path.resolve(__dirname, '..', 'terraform', 'aws', '.custom')
+  );
+  lnf.sync(
+    path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, 'terraform', 'ansible'),
+    path.resolve(__dirname, '..', 'terraform', 'ansible', '.custom')
+  );
 
   try {
     Gardens.Aws.validateArgs(argv);
@@ -86,40 +75,41 @@ exports.awsHandler = function(argv) {
   }
 
   winston.info('Tending all resources for the garden named "' + argv.garden + '"');
-  gardener.createKey(keyName).then(function(result) {
-      if (result.includes('already exists')) {
-        winston.warn(result);
-      } else {
-        afterCreateKey(keyName, result);
-      }
-      winston.info('Prepping prior to terraforming');
-      return gardener.terraformPrep(config.domain);
-    }).then(function(result) {
-      nameServers = result.nameServers;
-      writeAnsibleVars(argv);
-      return gardener.terraform((argv.dryrun ? 'plan' : 'apply'), result.stateBucket, {
-        'name': argv.garden,
-        'domain': config.domain,
-        'key_name': keyName,
-        'bastion_count': config.bastion.count,
-        'bastion_instance_type': config.bastion.type,
-        'hosted_zone_id': result.hostedZoneId,
-        'ci_subdomain': config.bastion.subdomains.ci,
-        'status_subdomain': config.bastion.subdomains.status,
-      });
-    }).then(function(result) {
-      removeAnsibleVars();
-      winston.info("Done tending the garden");
-      winston.info("Name servers:");
-      nameServers.forEach(function(nameServer) {
-        winston.info(`    ${nameServer}`);
-      });
-      winston.info("You should make sure the registrar for the domain '" + config.domain + "' is updated to point to the name servers above.")
-    }).catch(function(error) {
-      winston.error(error);
-      removeAnsibleVars();
-      process.exit(1);
+  gardener.createKey(argv.garden).then(function(result) {
+    keyName = result.name;
+    if (result.warning) {
+      winston.warn(result.warning);
+    } else {
+      afterCreateKey(argv.profile, argv.garden, result.name, result.content);
+    }
+    winston.info('Prepping prior to terraforming');
+    return gardener.terraformPrep(config.domain);
+  }).then(function(result) {
+    nameServers = result.nameServers;
+    writeAnsibleVars(argv);
+    return gardener.terraform((argv.dryrun ? 'plan' : 'apply'), result.stateBucket, {
+      'name': argv.garden,
+      'domain': config.domain,
+      'key_name': keyName,
+      'bastion_count': config.bastion.count,
+      'bastion_instance_type': config.bastion.type,
+      'hosted_zone_id': result.hostedZoneId,
+      'ci_subdomain': config.bastion.subdomains.ci,
+      'status_subdomain': config.bastion.subdomains.status
     });
+  }).then(function(result) {
+    removeAnsibleVars();
+    winston.info("Done tending the garden");
+    winston.info("Name servers:");
+    nameServers.forEach(function(nameServer) {
+      winston.info(`    ${nameServer}`);
+    });
+    winston.info("You should make sure the registrar for the domain '" + config.domain + "' is updated to point to the name servers above.")
+  }).catch(function(error) {
+    winston.error(error);
+    removeAnsibleVars();
+    process.exit(1);
+  });
 
 }
 

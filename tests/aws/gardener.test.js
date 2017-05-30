@@ -66,7 +66,7 @@ describe('Aws.Gardener', function() {
     };
     var gardener = getAwsGardner(awsMock);
     gardener.createKey('__tests').then(function(result) {
-      expect(result).to.include('already exists');
+      expect(result.warning).to.include('already exists');
     }).catch(function(error) {
       expect(error).to.equal(null);
     });
@@ -80,7 +80,7 @@ describe('Aws.Gardener', function() {
     };
     var gardener = getAwsGardner(awsMock);
     gardener.createKey('__tests').then(function(result) {
-      expect(result).to.equal('__test-key-material');
+      expect(result.content).to.equal('__test-key-material');
     }).catch(function(error) {
       expect(error).to.equal(null);
     });

@@ -10,6 +10,10 @@ exports.command = 'init [name]';
 exports.desc = 'initializes a new named configuration, which tells where in the cloud your gardens live, how they\'re accessed, tended, etc.  Configuration files are saved to \'/config/[name].json\'.';
 
 exports.handler = function(argv) {
+
+  // TODO: rework init command based on new .gardens directory, possiblity of housing customizations in a repo, etc.
+  return winston.error('init command is disabled temporarily');
+
   if (!argv.name) return winston.error('Please enter a name for the new configuration');
 
   var config = {

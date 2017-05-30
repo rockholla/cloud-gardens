@@ -7,6 +7,10 @@ variable "garden" {
   description = "the garden name"
 }
 
+variable "profile" {
+  description = "the AWS profile to use"
+}
+
 variable "domain" {
   description = "the top level domain name"
 }
@@ -85,7 +89,7 @@ resource "aws_instance" "bastion" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = "${file(format("../../.keys/%s", var.key_name))}"
+      private_key = "${file(format("../../.gardens/%s/%s/.keys/%s", var.profile, var.garden, var.key_name))}"
     }
   }
 
@@ -103,7 +107,7 @@ EOF
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = "${file(format("../../.keys/%s", var.key_name))}"
+      private_key = "${file(format("../../.gardens/%s/%s/.keys/%s", var.profile, var.garden, var.key_name))}"
     }
   }
 
@@ -117,15 +121,9 @@ EOF
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = "${file(format("../../.keys/%s", var.key_name))}"
+      private_key = "${file(format("../../.gardens/%s/%s/.keys/%s", var.profile, var.garden, var.key_name))}"
     }
   }
-}
-
-resource "aws_eip" "bastion" {
-  count    = "${var.instance_count}"
-  instance = "${element(aws_instance.bastion.*.id, count.index)}"
-  vpc      = true
 }
 
 resource "aws_route53_record" "ci" {
@@ -133,7 +131,7 @@ resource "aws_route53_record" "ci" {
   name    = "${var.ci_subdomain}.${var.domain}"
   type    = "A"
   ttl     = "300"
-  records = ["${aws_eip.bastion.*.public_ip}"]
+  records = ["${aws_instance.bastion.*.public_ip}"]
 }
 
 resource "aws_route53_record" "status" {
@@ -141,11 +139,11 @@ resource "aws_route53_record" "status" {
   name    = "${var.status_subdomain}.${var.domain}"
   type    = "A"
   ttl     = "300"
-  records = ["${aws_eip.bastion.*.public_ip}"]
+  records = ["${aws_instance.bastion.*.public_ip}"]
 }
 
 output "external_ips" {
-  value = ["${aws_eip.bastion.*.public_ip}"]
+  value = ["${aws_instance.bastion.*.public_ip}"]
 }
 
 output "ci_url" {

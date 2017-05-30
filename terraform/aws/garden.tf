@@ -182,6 +182,7 @@ module "security_groups" {
 module "bastion" {
   source            = "./bastion"
   garden            = "${var.name}"
+  profile           = "${var.profile}"
   domain            = "${var.domain}"
   ci_subdomain      = "${var.ci_subdomain}"
   status_subdomain  = "${var.status_subdomain}"
@@ -198,8 +199,8 @@ module "bastion" {
   aws_admin_secret  = "${module.iam.admin_user_secret}"
 }
 
-module "garden_custom" {
-  source = "../custom/active"
+module "customizations" {
+  source = "./.custom"
   garden = "${var.name}"
   domain = "${var.domain}"
 }
@@ -287,4 +288,8 @@ output "internal_route_tables" {
 // The external route table ID.
 output "external_route_tables" {
   value = "${module.vpc.external_rtb_id}"
+}
+
+output "customization_outputs" {
+  value = "${module.customizations.all}"
 }

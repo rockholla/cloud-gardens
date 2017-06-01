@@ -91,6 +91,7 @@ exports.awsHandler = function(argv) {
       'name': argv.garden,
       'domain': config.domain,
       'key_name': keyName,
+      'letsencrypt_ca': config.letsencrypt.ca,
       'bastion_count': config.bastion.count,
       'bastion_instance_type': config.bastion.type,
       'hosted_zone_id': result.hostedZoneId,

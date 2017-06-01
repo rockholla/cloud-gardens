@@ -2,6 +2,8 @@
 bastion_services_username: bastion
 bastion_services_password: bastion
 
+jenkins_repo_url: "deb http://pkg.jenkins.io/debian-stable binary/"
+jenkins_repo_key_url: "https://pkg.jenkins.io/debian/jenkins-ci.org.key"
 jenkins_admin_username: "{{ bastion_services_username }}"
 jenkins_admin_password: "{{ bastion_services_password }}"
 jenkins_hostname: "localhost"

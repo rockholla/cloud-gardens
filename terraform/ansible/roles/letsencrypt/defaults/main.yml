@@ -1,2 +1,4 @@
 ---
-letsencrypt_domains_command: "-d localhost"
+letsencrypt_ca: https://acme-v01.api.letsencrypt.org/directory
+letsencrypt_domains:
+  - localhost

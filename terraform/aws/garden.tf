@@ -18,6 +18,10 @@ variable "region" {
   description = "the AWS region in which resources are created, you must set the availability_zones variable as well if you define this value to something other than the default"
 }
 
+variable "letsencrypt_ca" {
+  description = "the uri to the LetsEncrypt certificate authority, useful in setting for production vs staging"
+}
+
 provider "aws" {
   profile = "${var.profile}"
   region = "${var.region}"
@@ -179,30 +183,32 @@ module "security_groups" {
   cidr        = "${var.cidr}"
 }
 
-module "bastion" {
-  source            = "./bastion"
+module "ca_bastion" {
+  source            = "./ca-bastion"
   garden            = "${var.name}"
   profile           = "${var.profile}"
   domain            = "${var.domain}"
-  ci_subdomain      = "${var.ci_subdomain}"
-  status_subdomain  = "${var.status_subdomain}"
-  region            = "${var.region}"
-  hosted_zone_id    = "${var.hosted_zone_id}"
-  instance_type     = "${var.bastion_instance_type}"
-  instance_count    = "${var.bastion_count}"
   security_groups   = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
-  vpc_id            = "${module.vpc.id}"
   ami_id            = "${data.aws_ami.default_ami.id}"
   subnet_id         = "${element(module.vpc.external_subnets, 0)}"
   key_name          = "${var.key_name}"
+  ci_subdomain      = "${var.ci_subdomain}"
+  status_subdomain  = "${var.status_subdomain}"
+  hosted_zone_id    = "${var.hosted_zone_id}"
+  instance_type     = "${var.bastion_instance_type}"
+  instance_count    = "${var.bastion_count}"
   aws_admin_id      = "${module.iam.admin_user_id}"
   aws_admin_secret  = "${module.iam.admin_user_secret}"
+  letsencrypt_ca    = "${var.letsencrypt_ca}"
 }
 
 module "customizations" {
-  source = "./.custom"
-  garden = "${var.name}"
-  domain = "${var.domain}"
+  source      = "./.custom"
+  garden      = "${var.name}"
+  profile     = "${var.profile}"
+  domain      = "${var.domain}"
+  key_name    = "${var.key_name}"
+  bastion_ips = "${module.ca_bastion.external_ips}"
 }
 
 // The region in which the infra lives.
@@ -212,17 +218,21 @@ output "region" {
 
 // The bastion host IPs.
 output "bastion_ips" {
-  value = ["${module.bastion.external_ips}"]
+  value = ["${module.ca_bastion.external_ips}"]
 }
 
 // The URL of the status, the control center for the garden
 output "status_url" {
-  value = ["${module.bastion.status_url}"]
+  value = ["${module.ca_bastion.status_url}"]
 }
 
 // The CI server URL
 output "ci_url" {
-  value = ["${module.bastion.ci_url}"]
+  value = ["${module.ca_bastion.ci_url}"]
+}
+
+output "cert_authority_ip" {
+  value = "${module.ca_bastion.ca_ip}"
 }
 
 // Comma separated list of internal subnet IDs.

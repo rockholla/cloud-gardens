@@ -17,6 +17,9 @@
     "region": null,
     "profile": "default"
   },
+  "letsencrypt": {
+    "ca": "https://acme-v01.api.letsencrypt.org/directory"
+  },
   "bastion": {
     "count": 1,
     "type": "t2.micro",

@@ -183,8 +183,8 @@ module "security_groups" {
   cidr        = "${var.cidr}"
 }
 
-module "ca_bastion" {
-  source            = "./ca-bastion"
+module "bastion" {
+  source            = "./bastion"
   garden            = "${var.name}"
   profile           = "${var.profile}"
   domain            = "${var.domain}"
@@ -208,7 +208,7 @@ module "customizations" {
   profile     = "${var.profile}"
   domain      = "${var.domain}"
   key_name    = "${var.key_name}"
-  bastion_ips = "${module.ca_bastion.external_ips}"
+  bastion_ips = "${module.bastion.external_ips}"
 }
 
 // The region in which the infra lives.
@@ -218,21 +218,17 @@ output "region" {
 
 // The bastion host IPs.
 output "bastion_ips" {
-  value = ["${module.ca_bastion.external_ips}"]
+  value = ["${module.bastion.external_ips}"]
 }
 
 // The URL of the status, the control center for the garden
 output "status_url" {
-  value = ["${module.ca_bastion.status_url}"]
+  value = ["${module.bastion.status_url}"]
 }
 
 // The CI server URL
 output "ci_url" {
-  value = ["${module.ca_bastion.ci_url}"]
-}
-
-output "cert_authority_ip" {
-  value = "${module.ca_bastion.ca_ip}"
+  value = ["${module.bastion.ci_url}"]
 }
 
 // Comma separated list of internal subnet IDs.

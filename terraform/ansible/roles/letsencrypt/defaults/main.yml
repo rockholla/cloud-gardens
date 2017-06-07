@@ -1,4 +1,6 @@
 ---
 letsencrypt_ca: https://acme-v01.api.letsencrypt.org/directory
+ssl_certs_master_ip: ""
+ssl_certs_sync_only: no
 letsencrypt_domains:
   - localhost

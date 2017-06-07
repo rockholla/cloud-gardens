@@ -16,12 +16,15 @@
   roles:
     - { role: aws }
     - { role: bcrypt }
-    - { role: ca-sync }
+    - { role: letsencrypt, ssl_certs_master_ip: bastion_master_ip, letsencrypt_domains: ["{{ domain }}","{{ traefik_ci_subdomain }}.{{ domain }}","{{ traefik_status_subdomain }}.{{ domain }}"] }
     - { role: geerlingguy.jenkins, jenkins_plugins: [] }
-    - { role: jenkins,  }
+    - { role: jenkins }
     - { role: aws, aws_config_directories: [ { path: /var/lib/jenkins/.aws, owner: jenkins } ] }
     - { role: traefik, traefik_hostname: "{{ domain }}" }
     - { role: logrotate }
+    # doing this sync again b/c of parallel setup of terraform bastion resources, better chance at initially syncing certs from master to slave
+    # TODO: probably could come up with a better solution here
+    - { role: letsencrypt, ssl_certs_sync_only: yes, ssl_certs_master_ip: bastion_master_ip }
 
   tasks:
     - include: "{{ playbook_dir }}/.custom/bastion.yml"

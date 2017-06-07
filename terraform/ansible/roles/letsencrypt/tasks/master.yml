@@ -1,0 +1,62 @@
+---
+
+- name: Ensure pip is installed
+  easy_install:
+    name: pip
+    state: present
+
+- name: Ensure boto python package is installed
+  pip:
+    name: boto
+    state: present
+
+- name: Ensure dehydrated config file exists with CA setting
+  lineinfile:
+    create: yes
+    dest: /etc/dehydrated/config
+    line: 'CA="{{ letsencrypt_ca }}"'
+
+- name: Checkout the dehydrated project
+  git:
+    accept_hostkey: yes
+    repo: "https://git@github.com/lukas2511/dehydrated.git"
+    dest: "/srv/dehydrated"
+    version: "116386486b3749e4c5e1b4da35904f30f8b2749b"
+
+- name: Get appropriate dehydrated hook for dns challenge
+  get_url:
+    url: https://gist.githubusercontent.com/rmarchei/98489c05f0898abe612eec916508f2bf/raw/a7f51af111c98544c0cee8739ebd0b88c39b3afa/route53.py
+    dest: /srv/dehydrated/route53.py
+
+- name: Make dehydrated and hook files executable
+  file:
+    path: "{{ item }}"
+    mode: 0755
+  with_items:
+    - /srv/dehydrated/dehydrated
+    - /srv/dehydrated/route53.py
+
+- name: See if terms accepted file exists
+  stat:
+    path: /srv/dehydrated/.terms-accepted
+  register: terms_accepted
+
+- name: Accept LetsEncrypt terms and register
+  shell: >
+    ./dehydrated --register --accept-terms && touch .terms-accepted
+    chdir=/srv/dehydrated
+  when: not terms_accepted.stat.exists
+
+- name: Create SSL cert(s)
+  shell: >
+    ./dehydrated -c -d {{ letsencrypt_domains | join(' -d ') }} -o /srv/dehydrated/certs -t dns-01 -k ./route53.py
+    chdir=/srv/dehydrated
+  environment:
+    AWS_PROFILE: default
+
+- name: Add a cron job to refresh of the cert on the first day of every month
+  cron:
+    job: "cd /srv/dehydrated && ./dehydrated -c -d {{ letsencrypt_domains | join(' -d ') }} -o /srv/dehydrated/certs -t dns-01 -k ./route53.py"
+    day: 1
+    hour: 0
+    minute: 0

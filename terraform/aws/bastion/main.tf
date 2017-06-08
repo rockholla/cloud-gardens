@@ -125,7 +125,7 @@ resource "null_resource" "bastion_copy_files" {
 }
 
 resource "null_resource" "bastion_copy_key" {
-  depends_on = ["aws_instance.bastion"]
+  depends_on = ["null_resource.bastion_copy_files"]
   count = "${aws_instance.bastion.count}"
   triggers {
     always_run = "${uuid()}"
@@ -143,8 +143,8 @@ resource "null_resource" "bastion_copy_key" {
   }
 }
 
-resource "null_resource" "bastion_set_overrides" {
-  depends_on = ["null_resource.bastion_copy_files"]
+resource "null_resource" "bastion_set_terraform_overrides" {
+  depends_on = ["null_resource.bastion_copy_key"]
   count = "${aws_instance.bastion.count}"
   triggers {
     always_run = "${uuid()}"
@@ -167,17 +167,14 @@ aws_config_directories:
 traefik_ci_subdomain: "${var.ci_subdomain}"
 traefik_status_subdomain: "${var.status_subdomain}"
 letsencrypt_ca: "${var.letsencrypt_ca}"
-bastion_shared_ssh_key: |
-  ${file(format("../../.gardens/%s/%s/.keys/%s", var.profile, var.garden, var.key_name))}
 bastion_is_master: ${count.index == 0 ? "yes" : "no"}
-bastion_master_ip: "${aws_instance.bastion.0.public_ip}"
 EOF
-    destination = "/home/ubuntu/ansible/vars/overrides/aws.yml"
+    destination = "/home/ubuntu/ansible/vars/overrides/terraform.yml"
   }
 }
 
 resource "null_resource" "bastion_provision" {
-  depends_on = ["null_resource.bastion_set_overrides"]
+  depends_on = ["null_resource.bastion_set_terraform_overrides"]
   count = "${aws_instance.bastion.count}"
   triggers {
     always_run = "${uuid()}"
@@ -199,17 +196,51 @@ resource "null_resource" "bastion_provision" {
   }
 }
 
-resource "aws_route53_record" "ci" {
-  zone_id = "${var.hosted_zone_id}"
-  name    = "${var.ci_subdomain}.${var.domain}"
-  type    = "A"
-  ttl     = "300"
-  records = ["${aws_instance.bastion.*.public_ip}"]
+resource "null_resource" "bastion_set_ssl_overrides" {
+  depends_on = ["null_resource.bastion_provision"]
+  count = "${aws_instance.bastion.count}"
+  triggers {
+    always_run = "${uuid()}"
+  }
+
+  provisioner "file" {
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file(format("../../.gardens/%s/%s/.keys/%s", var.profile, var.garden, var.key_name))}"
+      host        = "${element(aws_instance.bastion.*.public_ip, count.index)}"
+    }
+    content = <<EOF
+bastion_master_ip: "${count.index == 0 ? "" : aws_instance.bastion.0.public_ip}"
+bastion_master_ready: yes
+EOF
+    destination = "/home/ubuntu/ansible/vars/overrides/ssl.yml"
+  }
 }
 
-resource "aws_route53_record" "status" {
+resource "null_resource" "bastion_certs_sync" {
+  depends_on = ["null_resource.bastion_set_ssl_overrides"]
+  count = "${aws_instance.bastion.count}"
+  triggers {
+    always_run = "${uuid()}"
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file(format("../../.gardens/%s/%s/.keys/%s", var.profile, var.garden, var.key_name))}"
+      host        = "${element(aws_instance.bastion.*.public_ip, count.index)}"
+    }
+    inline = [
+      "cd /home/ubuntu/ansible && sudo ansible-playbook -i inventory/localhost --tags=ssl bastion.yml"
+    ]
+  }
+}
+
+resource "aws_route53_record" "catchall" {
   zone_id = "${var.hosted_zone_id}"
-  name    = "${var.status_subdomain}.${var.domain}"
+  name    = "*.${var.domain}"
   type    = "A"
   ttl     = "300"
   records = ["${aws_instance.bastion.*.public_ip}"]
@@ -220,9 +251,9 @@ output "external_ips" {
 }
 
 output "ci_url" {
-  value = "https://${aws_route53_record.ci.fqdn}"
+  value = "https://${var.ci_subdomain}.${var.domain}"
 }
 
 output "status_url" {
-  value = "https://${aws_route53_record.status.fqdn}"
+  value = "https://${var.status_subdomain}.${var.domain}"
 }

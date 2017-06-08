@@ -41,10 +41,6 @@ exports.handler = function(argv) {
     config = baseConfig;
   }
 
-  if (config.bastion.count > 1) {
-    winston.error("Sorry, only one bastion instance is supported for now, we hope to have support for horizontally scaled bastion instances soon.");
-    process.exit(1);
-  }
   try {
     Gardens.validateName(argv.garden);
   } catch (error) {

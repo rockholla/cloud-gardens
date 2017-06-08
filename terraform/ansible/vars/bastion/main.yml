@@ -1,7 +1,7 @@
 ---
 bastion_is_master: yes
 bastion_master_ip: ""
-bastion_shared_ssh_key: ""
+bastion_master_ready: no
 bastion_services_username: bastion
 bastion_services_password: bastion
 

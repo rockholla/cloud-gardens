@@ -17,11 +17,11 @@ defaultEntryPoints = ["http", "https"]
   address = ":443"
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
-      CertFile = "/etc/ssl/certs/{{ traefik_hostname }}/fullchain.pem"
-      KeyFile = "/etc/ssl/certs/{{ traefik_hostname }}/privkey.pem"
+      CertFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/fullchain.pem"
+      KeyFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/privkey.pem"
       [[entryPoints.https.tls.certificates]]
-      CertFile = "/etc/ssl/certs/{{ traefik_hostname }}/fullchain.pem"
-      KeyFile = "/etc/ssl/certs/{{ traefik_hostname }}/privkey.pem"
+      CertFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/fullchain.pem"
+      KeyFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/privkey.pem"
 
 [web]
 address = ":{{ traefik_status_port }}"

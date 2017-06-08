@@ -6,7 +6,7 @@
     state: directory
 
 - set_fact:
-    __ssl_certs_rsync_command: 'rsync -avz --rsync-path="sudo rsync" -e "ssh -i /home/{{ ansible_ssh_user }}/.ssh/bastion_rsa -o StrictHostKeyChecking=no" {{ ansible_ssh_user }}@{{ ssl_certs_master_ip }}:/srv/dehydrated/certs/ /srv/dehydrated/certs/'
+    __ssl_certs_rsync_command: 'rsync -avz --rsync-path="sudo rsync" -e "ssh -i /home/ubuntu/.ssh/bastion_rsa -o StrictHostKeyChecking=no" ubuntu@{{ ssl_certs_master_ip }}:/srv/dehydrated/certs/ /srv/dehydrated/certs/'
 
 - name: Get ssl certs from master
   shell: >
@@ -18,4 +18,3 @@
     day: 1
     hour: 2
     minute: 0
-  when: not ssl_certs_sync_only

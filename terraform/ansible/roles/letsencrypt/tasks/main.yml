@@ -1,7 +1,7 @@
 ---
 
 - include: master.yml
-  when: (ssl_certs_master_ip | default('')) == ''
+  when: ssl_certs_is_master == true
 
 - include: slave.yml
-  when: (ssl_certs_master_ip | default('')) != ''
+  when: (not ssl_certs_is_master) and ssl_certs_master_ready

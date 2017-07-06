@@ -23,6 +23,7 @@
   "bastion": {
     "count": 1,
     "type": "t2.micro",
+    "disk_size": 50,
     "services": {
       "username": "bastion",
       "password": "bastion"

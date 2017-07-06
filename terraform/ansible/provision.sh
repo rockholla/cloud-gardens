@@ -7,4 +7,4 @@ DEBIAN_FRONTEND=noninteractive apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confnew" dist-upgrade
 DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confnew" install ansible
 ansible-galaxy install -r requirements.yml
-ansible-playbook -i inventory/localhost $1
+ansible-playbook -i inventory/localhost "$@"

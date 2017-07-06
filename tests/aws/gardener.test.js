@@ -28,7 +28,11 @@ describe('Aws.Gardener', function() {
       },
       EC2: function() {},
       S3: function() {},
-      STS: function() {},
+      STS: function() {
+        this.getCallerIdentity = function(obj, callback) {
+          callback(null, { Account: '__test-account-data' });
+        };
+      },
       Route53: function() {}
     };
   });

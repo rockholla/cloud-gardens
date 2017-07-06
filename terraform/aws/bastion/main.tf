@@ -28,6 +28,11 @@ variable "instance_type" {
   description = "Instance type, see a list at: https://aws.amazon.com/ec2/instance-types/"
 }
 
+variable "disk_size" {
+  default     = 25
+  description = "disk size of a bastion instance"
+}
+
 variable "instance_count" {
   description = "the number of bastion instances to stand up"
 }
@@ -68,6 +73,19 @@ variable "letsencrypt_ca" {
   description = "the uri to the LetsEncrypt certificate authority, useful in setting for production vs staging"
 }
 
+variable "ecs_cluster_name" {
+  description = "The name of the ECS cluster for this garden"
+}
+
+variable "region" {
+  description = "The AWS region"
+}
+
+variable "ansible_tags" {
+  description = "A comma-delimited list of ansible tags"
+  default = "all"
+}
+
 resource "aws_instance" "bastion" {
   count                  = "${var.instance_count}"
   ami                    = "${var.ami_id}"
@@ -77,6 +95,11 @@ resource "aws_instance" "bastion" {
   key_name               = "${var.key_name}"
   vpc_security_group_ids = ["${split(",",var.security_groups)}"]
   monitoring             = true
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = "${var.disk_size}"
+  }
 
   tags {
     Name    = "${var.garden}-bastion-${count.index + 1}"
@@ -159,13 +182,17 @@ resource "null_resource" "bastion_set_terraform_overrides" {
     }
     content = <<EOF
 domain: "${var.domain}"
+hosted_zone_id: "${var.hosted_zone_id}"
+garden: "${var.garden}"
 aws_access_key_id: "${var.aws_admin_id}"
 aws_secret_access_key: "${var.aws_admin_secret}"
-aws_config_directories:
-  - { path: /home/ubuntu/.aws, owner: ubuntu }
-  - { path: /root/.aws, owner: root }
+aws_user_paths:
+  - { path: /home/ubuntu, owner: ubuntu, group: ubuntu }
+  - { path: /root, owner: root, group: ubuntu }
 traefik_ci_subdomain: "${var.ci_subdomain}"
 traefik_status_subdomain: "${var.status_subdomain}"
+traefik_ecs_region: "${var.region}"
+traefik_ecs_cluster_name: "${var.ecs_cluster_name}"
 letsencrypt_ca: "${var.letsencrypt_ca}"
 bastion_is_master: ${count.index == 0 ? "yes" : "no"}
 EOF
@@ -191,7 +218,7 @@ resource "null_resource" "bastion_provision" {
       "until [ -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done",
       "sudo chmod 0600 /home/ubuntu/.ssh/bastion_rsa",
       "sudo chmod +x /home/ubuntu/ansible/provision.sh",
-      "sudo /home/ubuntu/ansible/provision.sh bastion.yml"
+      "sudo /home/ubuntu/ansible/provision.sh --tags ${var.ansible_tags} bastion.yml"
     ]
   }
 }
@@ -238,12 +265,25 @@ resource "null_resource" "bastion_certs_sync" {
   }
 }
 
+data "external" "done" {
+  depends_on = ["null_resource.bastion_certs_sync"]
+  program = ["echo", "{\"message\": \"done\"}"]
+}
+
 resource "aws_route53_record" "catchall" {
   zone_id = "${var.hosted_zone_id}"
   name    = "*.${var.domain}"
   type    = "A"
   ttl     = "300"
   records = ["${aws_instance.bastion.*.public_ip}"]
+}
+
+resource "aws_route53_record" "mx" {
+  zone_id = "${var.hosted_zone_id}"
+  name    = "${var.domain}"
+  type    = "MX"
+  ttl     = "300"
+  records = ["10 mx1.${var.domain}"]
 }
 
 output "external_ips" {
@@ -256,4 +296,8 @@ output "ci_url" {
 
 output "status_url" {
   value = "https://${var.status_subdomain}.${var.domain}"
+}
+
+output "done_output" {
+  value = "${data.external.done.result}"
 }

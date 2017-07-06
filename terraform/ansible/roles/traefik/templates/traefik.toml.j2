@@ -19,9 +19,16 @@ defaultEntryPoints = ["http", "https"]
       [[entryPoints.https.tls.certificates]]
       CertFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/fullchain.pem"
       KeyFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/privkey.pem"
-      [[entryPoints.https.tls.certificates]]
-      CertFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/fullchain.pem"
-      KeyFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/privkey.pem"
+
+[acme]
+email = "admin@{{ traefik_hostname }}"
+storageFile = "acme.json"
+onDemand = true
+caServer = "{{ traefik_acme_server }}"
+entryPoint = "https"
+
+[[acme.domains]]
+main = "{{ traefik_hostname }}"
 
 [web]
 address = ":{{ traefik_status_port }}"
@@ -52,3 +59,13 @@ users = ["{{ traefik_status_username }}:{{ traefik_status_password_bcrypt.stdout
     [backends.status.servers.server1]
     url = "http://127.0.0.1:{{ traefik_status_port }}"
     weight = 1
+
+[ecs]
+
+Cluster = "{{ traefik_ecs_cluster_name }}"
+Watch = true
+RefreshSeconds = 15
+ExposedByDefault = true
+Region = "{{ traefik_ecs_region }}"
+AccessKeyID = "{{ traefik_ecs_access_key_id }}"
+SecretAccessKey = "{{ traefik_ecs_secret_access_key }}"

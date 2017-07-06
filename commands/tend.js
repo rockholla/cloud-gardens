@@ -71,7 +71,7 @@ exports.awsHandler = function(argv) {
   }
 
   winston.info('Tending all resources for the garden named "' + argv.garden + '"');
-  gardener.createKey(argv.garden).then(function(result) {
+  gardener.createKey(argv.garden + '.key').then(function(result) {
     keyName = result.name;
     if (result.warning) {
       winston.warn(result.warning);
@@ -90,9 +90,11 @@ exports.awsHandler = function(argv) {
       'letsencrypt_ca': config.letsencrypt.ca,
       'bastion_count': config.bastion.count,
       'bastion_instance_type': config.bastion.type,
+      'bastion_disk_size': config.bastion.disk_size,
       'hosted_zone_id': result.hostedZoneId,
       'ci_subdomain': config.bastion.subdomains.ci,
-      'status_subdomain': config.bastion.subdomains.status
+      'status_subdomain': config.bastion.subdomains.status,
+      'ansible_tags': argv.tags
     });
   }).then(function(result) {
     removeAnsibleVars();

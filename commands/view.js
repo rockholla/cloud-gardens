@@ -34,6 +34,7 @@ exports.awsHandler = function(argv) {
   var gardener    = new Gardens.Aws.Gardener(argv.profile, argv.region);
   var stateBucket = null;
   var graphPath   = null;
+  var keyName     = null;
   lnf.sync(
     path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, 'terraform', 'aws'),
     path.resolve(__dirname, '..', 'terraform', 'aws', '.custom')
@@ -46,20 +47,39 @@ exports.awsHandler = function(argv) {
   }
 
   winston.info('About to get a look at the garden named "' + argv.garden + '"');
-  gardener.terraformPrep(config.domain).then(function(result) {
-      stateBucket = result.stateBucket;
-      return gardener.terraform('output', stateBucket, { name: argv.garden });
-    }).then(function(result) {
-      graphPath = path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, '.graphs');
-      mkdirp.sync(graphPath);
-      graphPath = path.join(graphPath, 'all.png');
-      return gardener.terraform('graph | dot -Tpng > ' + graphPath, stateBucket, { name: argv.garden });
-    }).then(function(result) {
-      winston.info('A graph of resources has been saved to ' + graphPath);
-    }).catch(function(error) {
-      winston.error(error);
-      process.exit(1);
-    });
+  gardener.createKey(argv.garden + '.key').then(function(result) {
+    keyName = result.name;
+    if (result.warning) {
+      winston.warn(result.warning);
+    } else {
+      afterCreateKey(argv.profile, argv.garden, result.name, result.content);
+    }
+    winston.info('Prepping prior to terraforming');
+    return gardener.terraformPrep(config.domain);
+  }).then(function(result) {
+    stateBucket = result.stateBucket;
+    return gardener.terraform('output', stateBucket, {
+    'name': argv.garden,
+    'domain': config.domain,
+    'key_name': keyName,
+    'letsencrypt_ca': config.letsencrypt.ca,
+    'bastion_count': config.bastion.count,
+    'bastion_instance_type': config.bastion.type,
+    'hosted_zone_id': result.hostedZoneId,
+    'ci_subdomain': config.bastion.subdomains.ci,
+    'status_subdomain': config.bastion.subdomains.status
+  });
+  }).then(function(result) {
+    graphPath = path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, '.graphs');
+    mkdirp.sync(graphPath);
+    graphPath = path.join(graphPath, 'all.png');
+    return gardener.terraform('graph | dot -Tpng > ' + graphPath, stateBucket, { name: argv.garden });
+  }).then(function(result) {
+    winston.info('A graph of resources has been saved to ' + graphPath);
+  }).catch(function(error) {
+    winston.error(error);
+    process.exit(1);
+  });
 }
 
 exports.digitaloceanHandler = function(argv) {

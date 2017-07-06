@@ -61,6 +61,12 @@ var argv = require('yargs')
     describe: 'If present and if the operation supports it, a dry run of the operation will be attempted',
     type: 'boolean'
   })
+  .option('tags', {
+    alias: 't',
+    describe: 'comma-delimited list of ansible tags to run when tending',
+    nargs: 1,
+    default: 'all'
+  })
   .help('h')
   .alias('help', 'h')
   .demandCommand(1, 'you must include a command')

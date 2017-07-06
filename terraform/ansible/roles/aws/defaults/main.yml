@@ -1,6 +1,7 @@
 ---
+aws_garden: ""
 aws_region: ""
 aws_access_key_id: ""
 aws_secret_access_key: ""
-aws_config_directories:
-  - { path: /root/.aws, owner: root }
+aws_user_paths:
+  - { path: /root, owner: root, group: root }

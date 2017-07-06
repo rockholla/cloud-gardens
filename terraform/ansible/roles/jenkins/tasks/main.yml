@@ -1,4 +1,24 @@
 ---
+
+- name: Add docker apt key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add docker apt repo
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+    state: present
+
+- name: Ensure docker and other required packages are installed
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - docker-ce
+    - make
+
 - name: Encrypt the admin user password
   command: >
     python -c 'import bcrypt; print(bcrypt.hashpw("{{ jenkins_admin_password }}", bcrypt.gensalt(prefix=b"2a")))'
@@ -21,14 +41,14 @@
   lineinfile:
     dest: /var/lib/jenkins/users/{{ jenkins_admin_username }}/config.xml
     regexp: '^(\s+)?<passwordHash>.*<\/passwordHash>$'
-    line: "      <passwordHash>#jbcrypt:{{ jenkins_admin_password_bcrypt.stdout }}</passwordHash>"
+    line: "<passwordHash>#jbcrypt:{{ jenkins_admin_password_bcrypt.stdout }}</passwordHash>"
   notify: restart jenkins
 
 - name: Set our new users fullName
   lineinfile:
     dest: /var/lib/jenkins/users/{{ jenkins_admin_username }}/config.xml
     regexp: '^(\s+)?<fullName>.*<\/fullName>$'
-    line: "  <fullName>{{ jenkins_admin_username }}</fullName>"
+    line: "<fullName>{{ jenkins_admin_username }}</fullName>"
   notify: restart jenkins
 
 - meta: flush_handlers
@@ -52,3 +72,72 @@
       url: "http://{{ jenkins_hostname }}:{{ jenkins_http_port }}{{ jenkins_url_prefix }}"
   with_items: "{{ jenkins_plugins }}"
   notify: restart jenkins
+
+- name: Copy plugin files for install
+  copy:
+    src: "files/{{ item }}"
+    dest: "/var/lib/jenkins/plugins/{{ item }}"
+    owner: jenkins
+    group: jenkins
+  with_items:
+    - "scriptler-2.9.hpi"
+    - "uno-choice-1.5.3.hpi"
+  notify: restart jenkins
+
+- name: Move warning config file into place
+  copy:
+    src: files/jenkins.security.UpdateSiteWarningsConfiguration.xml
+    dest: /var/lib/jenkins/jenkins.security.UpdateSiteWarningsConfiguration.xml
+    owner: jenkins
+    group: jenkins
+    mode: 0644
+  notify: restart jenkins
+
+- name: Ensure .garden directory exists for the Jenkins environment
+  file:
+    path: /var/lib/jenkins/.garden
+    state: directory
+    owner: jenkins
+    group: jenkins
+
+- name: Ensure jenkins garden bash config file exists with necessary values
+  blockinfile:
+    create: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK default"
+    dest: "/var/lib/jenkins/.garden/config"
+    owner: "jenkins"
+    group: "jenkins"
+    block: |
+      garden="{{ garden }}"
+      domain="{{ domain }}"
+      hosted_zone_id="{{ hosted_zone_id }}"
+
+- name: Copy .profile in place for jenkins user
+  copy:
+    src: files/.profile
+    dest: /var/lib/jenkins/.profile
+    mode: 0644
+    owner: jenkins
+    group: jenkins
+
+- name: Make sure Jenkins user can run docker commands
+  user:
+    name: jenkins
+    group: jenkins
+    groups: docker
+    append: yes
+
+- name: Add Jenkins user to sudo group
+  user:
+    name: jenkins
+    groups: sudo
+    append: yes
+    state: present
+
+- name: Ensure Jenkins user doesn't need a password to sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    validate: visudo -cf %s

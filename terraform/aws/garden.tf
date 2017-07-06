@@ -18,6 +18,10 @@ variable "region" {
   description = "the AWS region in which resources are created, you must set the availability_zones variable as well if you define this value to something other than the default"
 }
 
+variable "account_id" {
+  description = "the AWS account ID"
+}
+
 variable "letsencrypt_ca" {
   description = "the uri to the LetsEncrypt certificate authority, useful in setting for production vs staging"
 }
@@ -78,9 +82,9 @@ variable "bastion_instance_type" {
   default = "t2.micro"
 }
 
-variable "ecs_cluster_name" {
-  description = "the name of the cluster, if not specified the variable name will be used"
-  default = ""
+variable "bastion_disk_size" {
+  description = "the root device disk size for a bastion instance (in GBs)"
+  default     = 25
 }
 
 variable "ecs_instance_type" {
@@ -96,30 +100,30 @@ variable "ecs_instance_ebs_optimized" {
 variable "ecs_min_size" {
   description = "the minimum number of instances to use in the default ecs cluster"
 
-  // create 3 instances in our cluster by default
-  // 2 instances to run our service with high-availability
+  // create 2 instances in our cluster by default
+  // 1 instances to run our service with high-availability
   // 1 extra instance so we can deploy without port collisions
-  default = 3
+  default = 2
 }
 
 variable "ecs_max_size" {
   description = "the maximum number of instances to use in the default ecs cluster"
-  default     = 100
+  default     = 5
 }
 
 variable "ecs_desired_capacity" {
   description = "the desired number of instances to use in the default ecs cluster"
-  default     = 3
+  default     = 2
 }
 
 variable "ecs_root_volume_size" {
   description = "the size of the ecs instance root volume"
-  default     = 25
+  default     = 50
 }
 
 variable "ecs_docker_volume_size" {
   description = "the size of the ecs instance docker volume"
-  default     = 25
+  default     = 50
 }
 
 variable "ecs_docker_auth_type" {
@@ -133,7 +137,7 @@ variable "ecs_docker_auth_data" {
 }
 
 variable "ecs_security_groups" {
-  description = "a comma separated list of security groups from which ingest traffic will be allowed on the ECS cluster, it defaults to allowing ingress traffic on port 22 and coming grom the ELBs"
+  description = "a comma separated list of security groups from which all ingest traffic will be allowed on the ECS cluster"
   default     = ""
 }
 
@@ -146,8 +150,24 @@ data "aws_ami" "default_ami" {
 }
 
 variable "ecs_ami" {
-  description = "the AMI that will be used to launch EC2 instances in the ECS cluster"
+  description = "The AMI that will be used to launch EC2 instances in the ECS cluster"
   default     = ""
+}
+
+variable "default_ecs_ami" {
+  default = {
+    us-east-1       = "ami-0e297018"
+    us-east-2       = "ami-43d0f626"
+    us-west-1       = "ami-fcd7f59c"
+    us-west-2       = "ami-596d6520"
+    eu-west-1       = "ami-5ae4f83c"
+    eu-west-2       = "ami-ada6b1c9"
+    eu-central-1    = "ami-25a4004a"
+    ap-northeast-1  = "ami-3a000e5d"
+    ap-southeast-1  = "ami-2428ab47"
+    ap-southeast-2  = "ami-ac5849cf"
+    ca-central-1    = "ami-8cfb44e8"
+  }
 }
 
 variable "extra_cloud_config_type" {
@@ -158,6 +178,11 @@ variable "extra_cloud_config_type" {
 variable "extra_cloud_config_content" {
   description = "extra cloud config content"
   default     = ""
+}
+
+variable "ansible_tags" {
+  description = "A comma-delimited list of ansible tags to use"
+  default = "all"
 }
 
 data "aws_availability_zones" "available" {}
@@ -183,32 +208,68 @@ module "security_groups" {
   cidr        = "${var.cidr}"
 }
 
+module "ecs_cluster" {
+  source                      = "./ecs-cluster"
+  name                        = "${var.name}-ecs-cluster"
+  environment                 = "default"
+  vpc_id                      = "${module.vpc.id}"
+  image_id                    = "${coalesce(var.ecs_ami, lookup(var.default_ecs_ami, var.region))}"
+  subnet_ids                  = "${module.vpc.internal_subnets}"
+  key_name                    = "${var.key_name}"
+  instance_type               = "${var.ecs_instance_type}"
+  instance_ebs_optimized      = "${var.ecs_instance_ebs_optimized}"
+  iam_instance_profile        = "${module.iam.ecs_profile_id}"
+  min_size                    = "${var.ecs_min_size}"
+  max_size                    = "${var.ecs_max_size}"
+  desired_capacity            = "${var.ecs_desired_capacity}"
+  region                      = "${var.region}"
+  availability_zones          = "${module.vpc.availability_zones}"
+  root_volume_size            = "${var.ecs_root_volume_size}"
+  docker_volume_size          = "${var.ecs_docker_volume_size}"
+  docker_auth_type            = "${var.ecs_docker_auth_type}"
+  docker_auth_data            = "${var.ecs_docker_auth_data}"
+  security_groups             = "${coalesce(var.ecs_security_groups, format("%s", module.security_groups.internal_ssh))}"
+  extra_cloud_config_type     = "${var.extra_cloud_config_type}"
+  extra_cloud_config_content  = "${var.extra_cloud_config_content}"
+}
+
 module "bastion" {
-  source            = "./bastion"
-  garden            = "${var.name}"
-  profile           = "${var.profile}"
-  domain            = "${var.domain}"
-  security_groups   = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
-  ami_id            = "${data.aws_ami.default_ami.id}"
-  subnet_id         = "${element(module.vpc.external_subnets, 0)}"
-  key_name          = "${var.key_name}"
-  ci_subdomain      = "${var.ci_subdomain}"
-  status_subdomain  = "${var.status_subdomain}"
-  hosted_zone_id    = "${var.hosted_zone_id}"
-  instance_type     = "${var.bastion_instance_type}"
-  instance_count    = "${var.bastion_count}"
-  aws_admin_id      = "${module.iam.admin_user_id}"
-  aws_admin_secret  = "${module.iam.admin_user_secret}"
-  letsencrypt_ca    = "${var.letsencrypt_ca}"
+  source              = "./bastion"
+  garden              = "${var.name}"
+  profile             = "${var.profile}"
+  domain              = "${var.domain}"
+  security_groups     = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
+  ami_id              = "${data.aws_ami.default_ami.id}"
+  subnet_id           = "${element(module.vpc.external_subnets, 0)}"
+  key_name            = "${var.key_name}"
+  ci_subdomain        = "${var.ci_subdomain}"
+  status_subdomain    = "${var.status_subdomain}"
+  hosted_zone_id      = "${var.hosted_zone_id}"
+  instance_type       = "${var.bastion_instance_type}"
+  disk_size           = "${var.bastion_disk_size}"
+  instance_count      = "${var.bastion_count}"
+  aws_admin_id        = "${module.iam.admin_user_id}"
+  aws_admin_secret    = "${module.iam.admin_user_secret}"
+  letsencrypt_ca      = "${var.letsencrypt_ca}"
+  region              = "${var.region}"
+  ecs_cluster_name    = "${module.ecs_cluster.name}"
+  ansible_tags        = "${var.ansible_tags}"
 }
 
 module "customizations" {
-  source      = "./.custom"
-  garden      = "${var.name}"
-  profile     = "${var.profile}"
-  domain      = "${var.domain}"
-  key_name    = "${var.key_name}"
-  bastion_ips = "${module.bastion.external_ips}"
+  source                  = "./.custom"
+  garden                  = "${var.name}"
+  profile                 = "${var.profile}"
+  domain                  = "${var.domain}"
+  hosted_zone_id          = "${var.hosted_zone_id}"
+  key_name                = "${var.key_name}"
+  vpc_id                  = "${module.vpc.id}"
+  vpc_internal_subnets    = "${module.vpc.internal_subnets}"
+  vpc_external_subnets    = "${module.vpc.external_subnets}"
+  bastion_security_group  = "${module.security_groups.bastion}"
+  ecs_security_group      = "${module.ecs_cluster.security_group}"
+  bastion_ips             = "${module.bastion.external_ips}"
+  bastion_done_output     = "${module.bastion.done_output}"
 }
 
 // The region in which the infra lives.
@@ -241,31 +302,6 @@ output "external_subnets" {
   value = "${module.vpc.external_subnets}"
 }
 
-// ECS Service IAM role.
-# output "iam_role" {
-#   value = "${module.iam_role.arn}"
-# }
-
-# // Default ECS role ID. Useful if you want to add a new policy to that role.
-# output "iam_role_default_ecs_role_id" {
-#   value = "${module.iam_role.default_ecs_role_id}"
-# }
-
-# // S3 bucket ID for ELB logs.
-# output "log_bucket_id" {
-#   value = "${module.s3_logs.id}"
-# }
-
-# // The internal domain name, e.g "stack.local".
-# output "domain_name" {
-#   value = "${module.dns.name}"
-# }
-
-# // The default ECS cluster name.
-# output "cluster" {
-#   value = "${module.ecs_cluster.name}"
-# }
-
 // The VPC availability zones.
 output "availability_zones" {
   value = "${module.vpc.availability_zones}"
@@ -281,11 +317,6 @@ output "vpc_id" {
   value = "${module.vpc.id}"
 }
 
-// The default ECS cluster security group ID.
-# output "ecs_cluster_security_group_id" {
-#   value = "${module.ecs_cluster.security_group_id}"
-# }
-
 // Comma separated list of internal route table IDs.
 output "internal_route_tables" {
   value = "${module.vpc.internal_rtb_id}"
@@ -296,6 +327,12 @@ output "external_route_tables" {
   value = "${module.vpc.external_rtb_id}"
 }
 
-output "customization_outputs" {
-  value = "${module.customizations.all}"
+// The default ECS cluster name.
+output "ecs_cluster" {
+  value = "${module.ecs_cluster.name}"
+}
+
+// The default ECS cluster security group ID.
+output "ecs_cluster_security_group_id" {
+  value = "${module.ecs_cluster.security_group}"
 }

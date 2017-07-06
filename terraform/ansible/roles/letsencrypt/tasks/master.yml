@@ -47,12 +47,19 @@
     chdir=/srv/dehydrated
   when: not terms_accepted.stat.exists
 
+- name: see if we have a full chain present for our domain yet
+  stat:
+    path: "/srv/dehydrated/certs/{{ letsencrypt_domains[0] }}/fullchain.pem"
+  changed_when: false
+  register: domain_fullchain
+
 - name: Create SSL cert(s)
   shell: >
     ./dehydrated -c -d {{ letsencrypt_domains | join(' -d ') }} -o /srv/dehydrated/certs -t dns-01 -k ./route53.py
     chdir=/srv/dehydrated
   environment:
     AWS_PROFILE: default
+  when: not domain_fullchain.stat.exists
 
 - name: Add a cron job to refresh of the cert on the first day of every month
   cron:

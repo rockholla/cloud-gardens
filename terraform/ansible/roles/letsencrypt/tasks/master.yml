@@ -63,6 +63,7 @@
 
 - name: Add a cron job to refresh of the cert on the first day of every month
   cron:
+    name: "dehydrated refresh"
     job: "cd /srv/dehydrated && ./dehydrated -c -d {{ letsencrypt_domains | join(' -d ') }} -o /srv/dehydrated/certs -t dns-01 -k ./route53.py"
     day: 1
     hour: 0

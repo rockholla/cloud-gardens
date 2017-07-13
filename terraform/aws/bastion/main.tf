@@ -73,6 +73,14 @@ variable "letsencrypt_ca" {
   description = "the uri to the LetsEncrypt certificate authority, useful in setting for production vs staging"
 }
 
+variable "letsencrypt_registration_info_base64" {
+  description = "registration info base64 encoded"
+}
+
+variable "letsencrypt_account_key_base64" {
+  description = "pem key based64 encoded"
+}
+
 variable "ecs_cluster_name" {
   description = "The name of the ECS cluster for this garden"
 }
@@ -194,6 +202,8 @@ traefik_status_subdomain: "${var.status_subdomain}"
 traefik_ecs_region: "${var.region}"
 traefik_ecs_cluster_name: "${var.ecs_cluster_name}"
 letsencrypt_ca: "${var.letsencrypt_ca}"
+letsencrypt_registration_info_base64: "${var.letsencrypt_registration_info_base64}"
+letsencrypt_account_key_base64: "${var.letsencrypt_account_key_base64}"
 bastion_is_master: ${count.index == 0 ? "yes" : "no"}
 EOF
     destination = "/home/ubuntu/ansible/vars/overrides/terraform.yml"

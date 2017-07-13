@@ -26,6 +26,16 @@ variable "letsencrypt_ca" {
   description = "the uri to the LetsEncrypt certificate authority, useful in setting for production vs staging"
 }
 
+variable "letsencrypt_registration_info_base64" {
+  description = "registration info base64 encoded"
+  default = ""
+}
+
+variable "letsencrypt_account_key_base64" {
+  description = "pem key based64 encoded"
+  default = ""
+}
+
 provider "aws" {
   profile = "${var.profile}"
   region = "${var.region}"
@@ -234,26 +244,28 @@ module "ecs_cluster" {
 }
 
 module "bastion" {
-  source              = "./bastion"
-  garden              = "${var.name}"
-  profile             = "${var.profile}"
-  domain              = "${var.domain}"
-  security_groups     = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
-  ami_id              = "${data.aws_ami.default_ami.id}"
-  subnet_id           = "${element(module.vpc.external_subnets, 0)}"
-  key_name            = "${var.key_name}"
-  ci_subdomain        = "${var.ci_subdomain}"
-  status_subdomain    = "${var.status_subdomain}"
-  hosted_zone_id      = "${var.hosted_zone_id}"
-  instance_type       = "${var.bastion_instance_type}"
-  disk_size           = "${var.bastion_disk_size}"
-  instance_count      = "${var.bastion_count}"
-  aws_admin_id        = "${module.iam.admin_user_id}"
-  aws_admin_secret    = "${module.iam.admin_user_secret}"
-  letsencrypt_ca      = "${var.letsencrypt_ca}"
-  region              = "${var.region}"
-  ecs_cluster_name    = "${module.ecs_cluster.name}"
-  ansible_tags        = "${var.ansible_tags}"
+  source                                = "./bastion"
+  garden                                = "${var.name}"
+  profile                               = "${var.profile}"
+  domain                                = "${var.domain}"
+  security_groups                       = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
+  ami_id                                = "${data.aws_ami.default_ami.id}"
+  subnet_id                             = "${element(module.vpc.external_subnets, 0)}"
+  key_name                              = "${var.key_name}"
+  ci_subdomain                          = "${var.ci_subdomain}"
+  status_subdomain                      = "${var.status_subdomain}"
+  hosted_zone_id                        = "${var.hosted_zone_id}"
+  instance_type                         = "${var.bastion_instance_type}"
+  disk_size                             = "${var.bastion_disk_size}"
+  instance_count                        = "${var.bastion_count}"
+  aws_admin_id                          = "${module.iam.admin_user_id}"
+  aws_admin_secret                      = "${module.iam.admin_user_secret}"
+  letsencrypt_ca                        = "${var.letsencrypt_ca}"
+  letsencrypt_registration_info_base64  = "${var.letsencrypt_registration_info_base64}"
+  letsencrypt_account_key_base64        = "${var.letsencrypt_account_key_base64}"
+  region                                = "${var.region}"
+  ecs_cluster_name                      = "${module.ecs_cluster.name}"
+  ansible_tags                          = "${var.ansible_tags}"
 }
 
 module "customizations" {

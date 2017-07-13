@@ -10,18 +10,25 @@
     name: boto
     state: present
 
-- name: Ensure dehydrated config file exists with CA setting
-  lineinfile:
+- name: Ensure dehydrated config directory exists
+  file:
+    path: /etc/dehydrated
+    state: directory
+
+- name: Ensure dehydrated config file exists with necessary settings
+  blockinfile:
+    marker: "# {mark} ANSIBLE MANAGED"
     create: yes
     dest: /etc/dehydrated/config
-    line: 'CA="{{ letsencrypt_ca }}"'
+    block: |
+      CA="{{ letsencrypt_ca }}"
+      WELLKNOWN="/srv/dehydrated"
 
 - name: Checkout the dehydrated project
   git:
     accept_hostkey: yes
     repo: "https://git@github.com/lukas2511/dehydrated.git"
     dest: "/srv/dehydrated"
-    version: "116386486b3749e4c5e1b4da35904f30f8b2749b"
 
 - name: Get appropriate dehydrated hook for dns challenge
   get_url:
@@ -36,16 +43,66 @@
     - /srv/dehydrated/dehydrated
     - /srv/dehydrated/route53.py
 
-- name: See if terms accepted file exists
-  stat:
-    path: /srv/dehydrated/.terms-accepted
-  register: terms_accepted
+- name: Make sure dehydrated accounts directory exists
+  file:
+    path: /etc/dehydrated/accounts
+    state: directory
+    mode: 0700
 
-- name: Accept LetsEncrypt terms and register
+- name: See if we have an accounts/account directory
+  find:
+    paths: /etc/dehydrated/accounts/
+    file_type: directory
+  register: dehydrated_accounts_initial
+
+- set_fact:
+    use_configured_letsencrypt_account: no
+
+- set_fact:
+    use_configured_letsencrypt_account: yes
+  when: (letsencrypt_registration_info_base64 | default('')) != '' and (letsencrypt_account_key_base64 | default('')) != ''
+
+- name: Initialize accounts area, accept terms
   shell: >
-    ./dehydrated --register --accept-terms && touch .terms-accepted
+    ./dehydrated --account --accept-terms
     chdir=/srv/dehydrated
-  when: not terms_accepted.stat.exists
+  when: dehydrated_accounts_initial.files|length == 0
+
+- name: Get our accounts directory contents
+  find:
+    paths: /etc/dehydrated/accounts/
+    file_type: directory
+  register: dehydrated_accounts
+
+- name: Get temporary account files (to delete)
+  find:
+    path: "/etc/dehydrated/accounts/{{ dehydrated_accounts.files[0].path | basename }}/"
+    file_type: file
+  register: tmp_account_files
+  changed_when: false
+  when: (dehydrated_accounts_initial.files|length == 0) and (use_configured_letsencrypt_account)
+
+- name: Empty account directory if we're using a configured account
+  file:
+    path: "/etc/dehydrated/accounts/{{ dehydrated_accounts.files[0].path | basename }}/{{ item.path | basename }}"
+    state: absent
+  when: (dehydrated_accounts_initial.files|length == 0) and (use_configured_letsencrypt_account)
+  with_items:
+    - "{{ tmp_account_files.files }}"
+
+- name: Make sure our LetsEncrypt registration info is in place
+  copy:
+    content: "{{ letsencrypt_registration_info_base64 | b64decode }}"
+    dest: "/etc/dehydrated/accounts/{{ dehydrated_accounts.files[0].path | basename }}/registration_info.json"
+    mode: 0600
+  when: use_configured_letsencrypt_account
+
+- name: Make sure our LetsEncrypt account key is in place
+  copy:
+    content: "{{ letsencrypt_account_key_base64 | b64decode }}"
+    dest: "/etc/dehydrated/accounts/{{ dehydrated_accounts.files[0].path | basename }}/account_key.pem"
+    mode: 0600
+  when: use_configured_letsencrypt_account
 
 - name: see if we have a full chain present for our domain yet
   stat:

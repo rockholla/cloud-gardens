@@ -65,6 +65,8 @@ exports.awsHandler = function(argv) {
         'name': argv.garden,
         'domain': config.domain,
         'letsencrypt_ca': config.letsencrypt.ca,
+        'letsencrypt_registration_info_base64': config.letsencrypt.registration_info ? (new Buffer(JSON.stringify(config.letsencrypt.registration_info)).toString('base64')) : null,
+        'letsencrypt_account_key_base64': config.letsencrypt.account_key ? (new Buffer(config.letsencrypt.account_key).toString('base64')) : null,
         'key_name': argv.garden + gardener.keyNameSuffix + '.key',
         'hosted_zone_id': result.hostedZoneId,
         'ci_subdomain': config.bastion.subdomains.ci,

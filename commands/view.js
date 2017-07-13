@@ -63,6 +63,8 @@ exports.awsHandler = function(argv) {
     'domain': config.domain,
     'key_name': keyName,
     'letsencrypt_ca': config.letsencrypt.ca,
+    'letsencrypt_registration_info_base64': config.letsencrypt.registration_info ? (new Buffer(JSON.stringify(config.letsencrypt.registration_info)).toString('base64')) : null,
+    'letsencrypt_account_key_base64': config.letsencrypt.account_key ? (new Buffer(config.letsencrypt.account_key).toString('base64')) : null,
     'bastion_count': config.bastion.count,
     'bastion_instance_type': config.bastion.type,
     'hosted_zone_id': result.hostedZoneId,

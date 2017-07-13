@@ -18,7 +18,9 @@
     "profile": "default"
   },
   "letsencrypt": {
-    "ca": "https://acme-v01.api.letsencrypt.org/directory"
+    "ca": "https://acme-v01.api.letsencrypt.org/directory",
+    "registration_info": null,
+    "account_key": null
   },
   "bastion": {
     "count": 1,

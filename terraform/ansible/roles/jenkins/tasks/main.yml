@@ -141,3 +141,11 @@
     regexp: '^%sudo'
     line: '%sudo ALL=(ALL) NOPASSWD: ALL'
     validate: visudo -cf %s
+
+- name: Ensure jenkins .ssh directory exists
+  file:
+    path: /var/lib/jenkins/.ssh
+    state: directory
+    mode: 0700
+    owner: jenkins
+    group: jenkins

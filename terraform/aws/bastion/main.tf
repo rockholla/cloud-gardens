@@ -227,6 +227,9 @@ resource "null_resource" "bastion_provision" {
     inline = [
       "until [ -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done",
       "sudo chmod 0600 /home/ubuntu/.ssh/bastion_rsa",
+      "sudo mkdir -p /root/.ssh",
+      "sudo chmod 0700 /root/.ssh",
+      "sudo cp /home/ubuntu/.ssh/bastion_rsa /root/.ssh/bastion_rsa",
       "sudo chmod +x /home/ubuntu/ansible/provision.sh",
       "sudo /home/ubuntu/ansible/provision.sh --tags ${var.ansible_tags} bastion.yml"
     ]

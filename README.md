@@ -1,7 +1,5 @@
 # Cloud Gardens: plant your projects, help them grow
 
-*** **NOTE: this repo is currently a work in progress** ***
-
 [![Build Status](https://travis-ci.org/rockholla/cloud-gardens.svg?branch=develop)](https://travis-ci.org/rockholla/cloud-gardens)
 
 Requirements:

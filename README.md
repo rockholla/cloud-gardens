@@ -37,7 +37,7 @@ Or you can simply make a new file named `[name of your configuration].json` in t
 
 Testing can be divided into 3 different categories:
 
-1. Unit testing the node scripts and libraries (underway and in a reasonable state, runnable via `npm test` and `npm run test-all`)
+1. Unit testing the node scripts and libraries (underway and in a reasonable state, runnable via `npm test` and `npm run quicktest`)
 2. Testing provisioning/configuration scripts in `terraform/ansible` (somewhat on its way via scripts in `terraform/ansible/tests`)
 3. Behavioral, E2E testing of garden creation overall (really just hapenning manually right now and will ultimately require running on cloud accounts or some reasonable way to mock AWS/DigitalOcean, etc.)
 

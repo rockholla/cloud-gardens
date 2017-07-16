@@ -43,14 +43,8 @@ Testing can be divided into 3 different categories:
 
 The goal is to get all 3 working in some automated way
 
-# WIP: Some diagrams illustrating the intention here...
+# Here's a diagram of what a garden actually looks like, the intended CI/CD workflow, etc
 
 A garden is an encapsulated ecosystem containing any number of isolated environments (dev, test, production, etc.), and integration tools and services for controlling these environments.  A garden is capable of serving many environments for many projects.
 
-![Garden Diagram](docs/diagram.jpg)
-
-# An example workflow
-
-Here's what your development and release workflow might look like making use of a garden
-
-![An exaple workflow](docs/example-workflow.jpg)
+![Garden Diagram](docs/cloud-gardens.png)

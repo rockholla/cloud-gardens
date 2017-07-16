@@ -1,5 +1,8 @@
 ---
 
+- set_fact:
+    __letsencrypt_all_domains: "{{ letsencrypt_domains }} + {{ letsencrypt_init_domains }}"
+
 - name: Ensure pip is installed
   easy_install:
     name: pip
@@ -112,7 +115,7 @@
 
 - name: Create SSL cert(s)
   shell: >
-    ./dehydrated -c -d {{ letsencrypt_domains | join(' -d ') }} -o /srv/dehydrated/certs -t dns-01 -k ./route53.py
+    ./dehydrated -c -d {{ __letsencrypt_all_domains | join(' -d ') }} -o /srv/dehydrated/certs -t dns-01 -k ./route53.py
     chdir=/srv/dehydrated
   environment:
     AWS_PROFILE: default

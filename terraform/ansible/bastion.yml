@@ -25,7 +25,8 @@
       ssl_certs_is_master: "{{ bastion_is_master }}"
       ssl_certs_master_ip: "{{ bastion_master_ip }}"
       ssl_certs_master_ready: "{{ bastion_master_ready }}"
-      letsencrypt_domains: ["{{ domain }}","{{ traefik_ci_subdomain }}.{{ domain }}","{{ traefik_status_subdomain }}.{{ domain }}","{{ lookup('pipe','date +%Y%m%d%H%M%S') }}.{{ domain }}"]
+      letsencrypt_domains: ["{{ domain }}","{{ traefik_ci_subdomain }}.{{ domain }}","{{ traefik_status_subdomain }}.{{ domain }}"]
+      letsencrypt_init_domains: ["{{ lookup('pipe','date +%Y%m%d%H%M%S') }}.{{ domain }}"]
       tags: [ ssl ]
     - role: geerlingguy.jenkins
       jenkins_plugins: []

@@ -1,8 +1,8 @@
 ---
 
-- name: Encrypt the status user password
-  command: >
-    python -c 'import bcrypt; print(bcrypt.hashpw("{{ traefik_status_password }}", bcrypt.gensalt(prefix=b"2a")))'
+- name: Get the hashed status user password
+  shell: >
+    currenthash=$(cat /etc/traefik.toml | grep -e "^users" | awk -F '"' '{print $2}' | awk -F ':' '{print $2}') && /usr/local/bin/print-password-hash.py "${currenthash}" "{{ traefik_status_password }}"
   register: traefik_status_password_bcrypt
   changed_when: false
 

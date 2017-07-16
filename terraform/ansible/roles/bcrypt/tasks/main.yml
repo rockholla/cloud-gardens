@@ -13,3 +13,9 @@
   pip:
     name: bcrypt
     state: present
+
+- name: Ensure the password hash printing script is in place
+  copy:
+    src: files/print-password-hash.py
+    dest: /usr/local/bin/print-password-hash.py
+    mode: 0755

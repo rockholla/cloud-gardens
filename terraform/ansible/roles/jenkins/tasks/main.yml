@@ -19,9 +19,9 @@
     - docker-ce
     - make
 
-- name: Encrypt the admin user password
-  command: >
-    python -c 'import bcrypt; print(bcrypt.hashpw("{{ jenkins_admin_password }}", bcrypt.gensalt(prefix=b"2a")))'
+- name: Get the hashed admin user password
+  shell: >
+    currenthash=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('/var/lib/jenkins/users/admin/config.xml').find('.//passwordHash').text.replace('#jbcrypt:', ''))") && /usr/local/bin/print-password-hash.py "${currenthash}" "{{ jenkins_admin_password }}"
   register: jenkins_admin_password_bcrypt
   changed_when: false
 
@@ -40,15 +40,15 @@
 - name: Set our admin user password
   lineinfile:
     dest: /var/lib/jenkins/users/{{ jenkins_admin_username }}/config.xml
-    regexp: '^(\s+)?<passwordHash>.*<\/passwordHash>$'
-    line: "<passwordHash>#jbcrypt:{{ jenkins_admin_password_bcrypt.stdout }}</passwordHash>"
+    regexp: '^\s+<passwordHash>.*<\/passwordHash>'
+    line: "      <passwordHash>#jbcrypt:{{ jenkins_admin_password_bcrypt.stdout }}</passwordHash>"
   notify: restart jenkins
 
 - name: Set our new users fullName
   lineinfile:
     dest: /var/lib/jenkins/users/{{ jenkins_admin_username }}/config.xml
-    regexp: '^(\s+)?<fullName>.*<\/fullName>$'
-    line: "<fullName>{{ jenkins_admin_username }}</fullName>"
+    regexp: '^\s+<fullName>.*<\/fullName>$'
+    line: "  <fullName>{{ jenkins_admin_username }}</fullName>"
   notify: restart jenkins
 
 - meta: flush_handlers
@@ -112,10 +112,36 @@
       domain="{{ domain }}"
       hosted_zone_id="{{ hosted_zone_id }}"
 
-- name: Copy .profile in place for jenkins user
-  copy:
-    src: files/.profile
+- name: Copy .profile content in place for jenkins user
+  blockinfile:
+    create: yes
+    marker: "# {mark} DEFAULT PROFILE BLOCK"
     dest: /var/lib/jenkins/.profile
+    insertbefore: BOF
+    block: |
+      #!/bin/bash
+
+      SSH_ENV="$HOME/.ssh/environment"
+
+      function start_agent {
+        echo "Initialising new SSH agent..."
+        /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
+        echo succeeded
+        chmod 600 "${SSH_ENV}"
+        . "${SSH_ENV}" > /dev/null
+        /usr/bin/ssh-add;
+      }
+
+      # Source SSH settings, if applicable
+      if [ -f "${SSH_ENV}" ]; then
+        . "${SSH_ENV}" > /dev/null
+        #ps ${SSH_AGENT_PID} doesn't work under cywgin
+        ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
+          start_agent;
+        }
+      else
+        start_agent;
+      fi
     mode: 0644
     owner: jenkins
     group: jenkins

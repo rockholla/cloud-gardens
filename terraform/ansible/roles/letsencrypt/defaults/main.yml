@@ -5,5 +5,6 @@ ssl_certs_master_ip: ""
 ssl_certs_master_ready: no
 letsencrypt_domains:
   - localhost
+letsencrypt_init_domains: []
 letsencrypt_registration_info_base64: null
 letsencrypt_account_key_base64: null

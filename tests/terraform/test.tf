@@ -2,6 +2,7 @@
 
 variable "one" {
   description = "One"
+  default = "default when null"
 }
 
 output "one" {

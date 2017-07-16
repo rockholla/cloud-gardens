@@ -24,4 +24,12 @@ describe('Terraform', function() {
     expect(tf.execute('plan', { one: 1111 }, '', 'pipe').toString()).to.include('No changes. Infrastructure is up-to-date.');
   });
 
+  it ('Node interface to terraform should support different types of parameters/values', function () {
+    this.timeout(10000);
+    var tf = new Terraform(__dirname);
+    expect(tf.execute('apply', { one: 1111 }, '', 'pipe').toString()).to.include('one = 1111');
+    expect(tf.execute('apply', { one: null }, '', 'pipe').toString()).to.include('one = default when null');
+    expect(tf.execute('apply', { one: "test string" }, '', 'pipe').toString()).to.include('one = test string');
+  });
+
 });

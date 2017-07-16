@@ -6,3 +6,4 @@ config/*
 !config/default.json
 .gardens
 !.gardens/README.md
+*.tfstate*

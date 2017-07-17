@@ -21,7 +21,7 @@
 
 - name: Get the hashed admin user password
   shell: >
-    currenthash=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('/var/lib/jenkins/users/admin/config.xml').find('.//passwordHash').text.replace('#jbcrypt:', ''))") && /usr/local/bin/print-password-hash.py "${currenthash}" "{{ jenkins_admin_password }}"
+    currenthash=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('/var/lib/jenkins/users/admin/config.xml').find('.//passwordHash').text.replace('#jbcrypt:', ''))"); /usr/local/bin/print-password-hash.py "${currenthash}" "{{ jenkins_admin_password }}"
   register: jenkins_admin_password_bcrypt
   changed_when: false
 

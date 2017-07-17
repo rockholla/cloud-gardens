@@ -175,3 +175,21 @@
     mode: 0700
     owner: jenkins
     group: jenkins
+
+- name: See if bastion_rsa file exists for jenkins
+  stat:
+    path: /var/lib/jenkins/.ssh/bastion_rsa
+  register: jenkins_bastion_rsa
+
+- name: Ensure root bastion_rsa file is available for jenkins as well
+  shell: >
+    cp /root/.ssh/bastion_rsa /var/lib/jenkins/.ssh/bastion_rsa
+  when: not jenkins_bastion_rsa.stat.exists
+
+- name: Ensure correct ownership and perms for the bastion_rsa file
+  file:
+    path: /var/lib/jenkins/.ssh/bastion_rsa
+    state: file
+    mode: 0600
+    owner: jenkins
+    group: jenkins

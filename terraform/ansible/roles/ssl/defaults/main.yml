@@ -1,4 +1,5 @@
 ---
+letsencrypt_enabled: yes
 letsencrypt_ca: https://acme-v01.api.letsencrypt.org/directory
 ssl_certs_is_master: yes
 ssl_certs_master_ip: ""

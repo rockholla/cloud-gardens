@@ -7,4 +7,8 @@ RUN apt-get update
 RUN apt-get -y dist-upgrade
 RUN apt-get install -y ansible
 
-CMD /lib/systemd/systemd
+RUN mkdir -p /root/.ssh && chmod 0700 /root/.ssh
+COPY ./bastion_rsa /root/.ssh/bastion_rsa
+RUN chmod 0600 /root/.ssh/bastion_rsa
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]

@@ -1,9 +1,15 @@
 ---
-traefik_acme_server: "https://acme-v01.api.letsencrypt.org/directory"
+domain: ""
+ci_subdomain: ""
+status_subdomain: ""
+
+letsencrypt_enabled: yes
+letsencrypt_ca: "https://acme-v01.api.letsencrypt.org/directory"
+
+aws_access_key_id: ""
+aws_secret_access_key: ""
+
 traefik_version: "v1.2.3"
-traefik_hostname: "localhost"
-traefik_ci_subdomain: "ci"
-traefik_status_subdomain: "status"
 traefik_status_username: "admin"
 traefik_status_password: "admin"
 traefik_status_port: 9000
@@ -20,5 +26,3 @@ traefik_log_level: "INFO"
 traefik_logs_directory: /var/log/traefik
 traefik_ecs_cluster_name: "default"
 traefik_ecs_region: "us-east-1"
-traefik_ecs_access_key_id: ""
-traefik_ecs_secret_access_key: ""

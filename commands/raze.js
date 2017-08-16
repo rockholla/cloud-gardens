@@ -64,6 +64,7 @@ exports.awsHandler = function(argv) {
       return gardener.terraform('destroy', result.stateBucket, {
         'name': argv.garden,
         'domain': config.domain,
+        'letsencrypt_enabled': config.letsencrypt.enabled,
         'letsencrypt_ca': config.letsencrypt.ca,
         'letsencrypt_registration_info_base64': config.letsencrypt.registration_info ? (new Buffer(JSON.stringify(config.letsencrypt.registration_info)).toString('base64')) : null,
         'letsencrypt_account_key_base64': config.letsencrypt.account_key ? (new Buffer(config.letsencrypt.account_key).toString('base64')) : null,

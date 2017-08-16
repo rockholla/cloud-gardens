@@ -2,22 +2,28 @@
 
 - name: Add docker apt key
   apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
+    keyserver: hkp://p80.pool.sks-keyservers.net:80
+    id: "58118E89F3A912897C070ADBF76221572C52609D"
+
+- name: Get lsb release name
+  shell: >
+    lsb_release -c | awk '{print $2}'
+  register: lsb_release_codename
+  changed_when: false
 
 - name: Add docker apt repo
   apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+    repo: "deb https://apt.dockerproject.org/repo ubuntu-{{ lsb_release_codename.stdout }} main"
     state: present
+    update_cache: yes
 
-- name: Ensure docker and other required packages are installed
+- name: Ensure docker is installed
   apt:
     name: "{{ item }}"
     state: present
     update_cache: yes
   with_items:
-    - docker-ce
-    - make
+    - docker-engine
 
 - name: Get the hashed admin user password
   shell: >
@@ -162,6 +168,7 @@
 
 - name: Ensure Jenkins user doesn't need a password to sudo
   lineinfile:
+    create: yes
     dest: /etc/sudoers
     state: present
     regexp: '^%sudo'

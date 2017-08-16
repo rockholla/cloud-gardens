@@ -69,6 +69,11 @@ variable "ami_id" {
   description = "the AMI ID to use for the bastion instance(s)"
 }
 
+variable "letsencrypt_enabled" {
+  description = "whether or not to use LetsEncrypt as the SSL cert provider"
+  default = "yes"
+}
+
 variable "letsencrypt_ca" {
   description = "the uri to the LetsEncrypt certificate authority, useful in setting for production vs staging"
 }
@@ -201,6 +206,7 @@ traefik_ci_subdomain: "${var.ci_subdomain}"
 traefik_status_subdomain: "${var.status_subdomain}"
 traefik_ecs_region: "${var.region}"
 traefik_ecs_cluster_name: "${var.ecs_cluster_name}"
+letsencrypt_enabled: ${var.letsencrypt_enabled}
 letsencrypt_ca: "${var.letsencrypt_ca}"
 letsencrypt_registration_info_base64: "${var.letsencrypt_registration_info_base64}"
 letsencrypt_account_key_base64: "${var.letsencrypt_account_key_base64}"

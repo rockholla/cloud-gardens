@@ -22,6 +22,11 @@ variable "account_id" {
   description = "the AWS account ID"
 }
 
+variable "letsencrypt_enabled" {
+  description = "whether or not to use LetsEncrypt as the SSL cert provider"
+  default = "yes"
+}
+
 variable "letsencrypt_ca" {
   description = "the uri to the LetsEncrypt certificate authority, useful in setting for production vs staging"
 }
@@ -151,7 +156,12 @@ variable "ecs_security_groups" {
   default     = ""
 }
 
-data "aws_ami" "default_ami" {
+variable "bastion_ami" {
+  description = "The AMI to use for the bastion instance(s)"
+  default     = ""
+}
+
+data "aws_ami" "default_bastion_ami" {
   most_recent = true
   filter {
     name    = "name"
@@ -249,7 +259,7 @@ module "bastion" {
   profile                               = "${var.profile}"
   domain                                = "${var.domain}"
   security_groups                       = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
-  ami_id                                = "${data.aws_ami.default_ami.id}"
+  ami_id                                = "${coalesce(var.bastion_ami, data.aws_ami.default_bastion_ami.id)}"
   subnet_id                             = "${element(module.vpc.external_subnets, 0)}"
   key_name                              = "${var.key_name}"
   ci_subdomain                          = "${var.ci_subdomain}"
@@ -260,6 +270,7 @@ module "bastion" {
   instance_count                        = "${var.bastion_count}"
   aws_admin_id                          = "${module.iam.admin_user_id}"
   aws_admin_secret                      = "${module.iam.admin_user_secret}"
+  letsencrypt_enabled                   = "${var.letsencrypt_enabled}"
   letsencrypt_ca                        = "${var.letsencrypt_ca}"
   letsencrypt_registration_info_base64  = "${var.letsencrypt_registration_info_base64}"
   letsencrypt_account_key_base64        = "${var.letsencrypt_account_key_base64}"

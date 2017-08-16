@@ -18,6 +18,7 @@
     "profile": "default"
   },
   "letsencrypt": {
+    "enabled": true,
     "ca": "https://acme-v01.api.letsencrypt.org/directory",
     "registration_info": null,
     "account_key": null
@@ -26,6 +27,7 @@
     "count": 1,
     "type": "t2.micro",
     "disk_size": 50,
+    "ami": null,
     "services": {
       "username": "bastion",
       "password": "bastion"

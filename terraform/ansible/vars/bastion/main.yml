@@ -1,6 +1,10 @@
 ---
 domamin: ""
 garden: ""
+hosted_zone_id: ""
+
+ci_subdomain: "ci"
+status_subdomain: "status"
 
 letsencrypt_ca: "https://acme-v01.api.letsencrypt.org/directory"
 

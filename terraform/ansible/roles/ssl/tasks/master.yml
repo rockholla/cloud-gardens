@@ -7,16 +7,19 @@
   easy_install:
     name: pip
     state: present
+  when: letsencrypt_enabled
 
 - name: Ensure boto python package is installed
   pip:
     name: boto
     state: present
+  when: letsencrypt_enabled
 
 - name: Ensure dehydrated config directory exists
   file:
     path: /etc/dehydrated
     state: directory
+  when: letsencrypt_enabled
 
 - name: Ensure dehydrated config file exists with necessary settings
   blockinfile:
@@ -26,17 +29,20 @@
     block: |
       CA="{{ letsencrypt_ca }}"
       WELLKNOWN="/srv/dehydrated"
+  when: letsencrypt_enabled
 
 - name: Checkout the dehydrated project
   git:
     accept_hostkey: yes
     repo: "https://git@github.com/lukas2511/dehydrated.git"
     dest: "/srv/dehydrated"
+  when: letsencrypt_enabled
 
 - name: Get appropriate dehydrated hook for dns challenge
   get_url:
     url: https://gist.githubusercontent.com/rmarchei/98489c05f0898abe612eec916508f2bf/raw/a7f51af111c98544c0cee8739ebd0b88c39b3afa/route53.py
     dest: /srv/dehydrated/route53.py
+  when: letsencrypt_enabled
 
 - name: Make dehydrated and hook files executable
   file:
@@ -45,12 +51,14 @@
   with_items:
     - /srv/dehydrated/dehydrated
     - /srv/dehydrated/route53.py
+  when: letsencrypt_enabled
 
 - name: Make sure dehydrated accounts directory exists
   file:
     path: /etc/dehydrated/accounts
     state: directory
     mode: 0700
+  when: letsencrypt_enabled
 
 - name: See if we have an accounts/account directory
   find:
@@ -63,19 +71,20 @@
 
 - set_fact:
     use_configured_letsencrypt_account: yes
-  when: (letsencrypt_registration_info_base64 | default('')) != '' and (letsencrypt_account_key_base64 | default('')) != ''
+  when: letsencrypt_enabled and ((letsencrypt_registration_info_base64|default(None)) != None) and ((letsencrypt_account_key_base64|default(None)) != None)
 
 - name: Initialize accounts area, accept terms
   shell: >
     ./dehydrated --account --accept-terms
     chdir=/srv/dehydrated
-  when: dehydrated_accounts_initial.files|length == 0
+  when: letsencrypt_enabled and (dehydrated_accounts_initial.files|length == 0)
 
 - name: Get our accounts directory contents
   find:
     paths: /etc/dehydrated/accounts/
     file_type: directory
   register: dehydrated_accounts
+  when: letsencrypt_enabled
 
 - name: Get temporary account files (to delete)
   find:
@@ -83,13 +92,13 @@
     file_type: file
   register: tmp_account_files
   changed_when: false
-  when: (dehydrated_accounts_initial.files|length == 0) and (use_configured_letsencrypt_account)
+  when: letsencrypt_enabled and (dehydrated_accounts_initial.files|length == 0) and (use_configured_letsencrypt_account)
 
 - name: Empty account directory if we're using a configured account
   file:
     path: "/etc/dehydrated/accounts/{{ dehydrated_accounts.files[0].path | basename }}/{{ item.path | basename }}"
     state: absent
-  when: (dehydrated_accounts_initial.files|length == 0) and (use_configured_letsencrypt_account)
+  when: letsencrypt_enabled and (dehydrated_accounts_initial.files|length == 0) and (use_configured_letsencrypt_account)
   with_items:
     - "{{ tmp_account_files.files }}"
 
@@ -98,28 +107,30 @@
     content: "{{ letsencrypt_registration_info_base64 | b64decode }}"
     dest: "/etc/dehydrated/accounts/{{ dehydrated_accounts.files[0].path | basename }}/registration_info.json"
     mode: 0600
-  when: use_configured_letsencrypt_account
+  when: letsencrypt_enabled and use_configured_letsencrypt_account
 
 - name: Make sure our LetsEncrypt account key is in place
   copy:
     content: "{{ letsencrypt_account_key_base64 | b64decode }}"
     dest: "/etc/dehydrated/accounts/{{ dehydrated_accounts.files[0].path | basename }}/account_key.pem"
     mode: 0600
-  when: use_configured_letsencrypt_account
+  when: letsencrypt_enabled and use_configured_letsencrypt_account
 
 - name: see if we have a full chain present for our domain yet
   stat:
-    path: "/srv/dehydrated/certs/{{ letsencrypt_domains[0] }}/fullchain.pem"
+    path: "/etc/ssl/certs/{{ letsencrypt_domains[0] }}/fullchain.pem"
   changed_when: false
   register: domain_fullchain
+  when: letsencrypt_enabled
 
 - name: Create SSL cert(s)
   shell: >
-    ./dehydrated -c -d {{ __letsencrypt_all_domains | join(' -d ') }} -o /srv/dehydrated/certs -t dns-01 -k ./route53.py
+    ./dehydrated -c -d {{ __letsencrypt_all_domains | join(' -d ') }} -o /etc/ssl/certs -t dns-01 -k ./route53.py
     chdir=/srv/dehydrated
   environment:
     AWS_PROFILE: default
-  when: not domain_fullchain.stat.exists
+    HOSTED_ZONE: "{{ domain }}"
+  when: letsencrypt_enabled and (not domain_fullchain.stat.exists)
 
 - name: Add a cron job to refresh of the cert on the first day of every month
   cron:
@@ -128,3 +139,4 @@
     day: 1
     hour: 0
     minute: 0
+  when: letsencrypt_enabled

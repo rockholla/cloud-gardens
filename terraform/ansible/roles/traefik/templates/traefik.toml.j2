@@ -17,18 +17,20 @@ defaultEntryPoints = ["http", "https"]
   address = ":443"
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
-      CertFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/fullchain.pem"
-      KeyFile = "/srv/dehydrated/certs/{{ traefik_hostname }}/privkey.pem"
+      CertFile = "/etc/ssl/certs/{{ domain }}/fullchain.pem"
+      KeyFile = "/etc/ssl/certs/{{ domain }}/privkey.pem"
 
+{% if letsencrypt_enabled %}
 [acme]
-email = "admin@{{ traefik_hostname }}"
+email = "admin@{{ domain }}"
 storageFile = "acme.json"
 onDemand = true
-caServer = "{{ traefik_acme_server }}"
+caServer = "{{ letsencrypt_ca }}"
 entryPoint = "https"
 
 [[acme.domains]]
-main = "{{ traefik_hostname }}"
+main = "{{ domain }}"
+{% endif %}
 
 [web]
 address = ":{{ traefik_status_port }}"
@@ -43,12 +45,12 @@ users = ["{{ traefik_status_username }}:{{ traefik_status_password_bcrypt.stdout
   passHostHeader = true
   backend = "ci"
     [frontends.ci.routes.ci_1]
-    rule = "Host: {{ traefik_ci_subdomain }}.{{ traefik_hostname }}"
+    rule = "Host: {{ ci_subdomain }}.{{ domain }}"
   [frontends.status]
   passHostHeader = true
   backend = "status"
     [frontends.status.routes.status_1]
-    rule = "Host: {{ traefik_status_subdomain }}.{{ traefik_hostname }}"
+    rule = "Host: {{ status_subdomain }}.{{ domain }}"
 
 [backends]
   [backends.ci]
@@ -67,5 +69,5 @@ Watch = true
 RefreshSeconds = 15
 ExposedByDefault = true
 Region = "{{ traefik_ecs_region }}"
-AccessKeyID = "{{ traefik_ecs_access_key_id }}"
-SecretAccessKey = "{{ traefik_ecs_secret_access_key }}"
+AccessKeyID = "{{ aws_access_key_id }}"
+SecretAccessKey = "{{ aws_secret_access_key }}"

@@ -1,10 +1,5 @@
 ---
 
-- name: Ensure pip is installed
-  easy_install:
-    name: pip
-    state: present
-
 - name: Ensure aws command line tools are installed
   pip:
     name: awscli
@@ -66,6 +61,8 @@
   command: >
     curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest
   when: not ecs_cli_binary.stat.exists
+  args:
+    warn: no
 
 - name: Make sure ecs-cli binary has correct permissions
   file:

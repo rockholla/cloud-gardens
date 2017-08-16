@@ -4,6 +4,27 @@
   become: yes
 
   pre_tasks:
+    - name: Update and upgrade apt
+      apt: update_cache=yes upgrade=dist cache_valid_time=3600
+
+    - name: Ensure required packages are installed
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - sudo
+        - make
+        - curl
+        - apt-transport-https
+        - ca-certificates
+        - software-properties-common
+        - git
+
+    - name: Ensure pip is installed
+      easy_install:
+        name: pip
+        state: present
+
     - name: Include bastion variables
       include_vars:
         dir: vars/bastion
@@ -16,37 +37,30 @@
       tags: [ always ]
 
   roles:
-    - role: aws
-      aws_garden: "{{ garden }}"
-      tags: [ jenkins, aws ]
-    - role: bcrypt
-      tags: [ bcrypt ]
-    - role: letsencrypt
+    - { role: aws, tags: [ jenkins, aws ] }
+    - { role: bcrypt, tags: [ bcrypt ] }
+    - role: ssl
       ssl_certs_is_master: "{{ bastion_is_master }}"
       ssl_certs_master_ip: "{{ bastion_master_ip }}"
       ssl_certs_master_ready: "{{ bastion_master_ready }}"
-      letsencrypt_domains: ["{{ domain }}","{{ traefik_ci_subdomain }}.{{ domain }}","{{ traefik_status_subdomain }}.{{ domain }}"]
+      letsencrypt_domains: ["{{ domain }}","{{ ci_subdomain }}.{{ domain }}","{{ status_subdomain }}.{{ domain }}"]
       letsencrypt_init_domains: ["{{ lookup('pipe','date +%Y%m%d%H%M%S') }}.{{ domain }}"]
       tags: [ ssl ]
-    - role: geerlingguy.jenkins
-      jenkins_plugins: []
-      tags: [ jenkins ]
-    - role: jenkins
-      tags: [ jenkins ]
+    - { role: geerlingguy.jenkins, jenkins_plugins: [], tags: [ jenkins ] }
+    - { role: jenkins, tags: [ jenkins ] }
     - role: aws
-      aws_garden: "{{ garden }}"
       aws_user_paths: [ { path: /var/lib/jenkins, owner: jenkins, group: jenkins } ]
       tags: [ aws, jenkins ]
-    - role: traefik
-      traefik_acme_server: "{{ letsencrypt_ca }}"
-      traefik_hostname: "{{ domain }}"
-      traefik_ecs_access_key_id: "{{ aws_access_key_id }}"
-      traefik_ecs_secret_access_key: "{{ aws_secret_access_key }}"
-      when: bastion_master_ready
-      tags: [ ssl, traefik ]
-    - role: logrotate
-      tags: [ logrotate ]
+    - { role: traefik, when: bastion_master_ready, tags: [ ssl, traefik ] }
+    - { role: logrotate, tags: [ logrotate ] }
 
   tasks:
+
+    - stat:
+        path: "{{ playbook_dir }}/.custom/bastion.yml"
+      register: custom_bastion_include
+      tags: [ custom ]
+
     - include: "{{ playbook_dir }}/.custom/bastion.yml"
+      when: (custom_bastion_include is defined) and (custom_bastion_include.stat.exists)
       tags: [ custom ]

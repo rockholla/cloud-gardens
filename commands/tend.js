@@ -98,7 +98,10 @@ exports.awsHandler = function(argv) {
       'hosted_zone_id': result.hostedZoneId,
       'ci_subdomain': config.bastion.subdomains.ci,
       'status_subdomain': config.bastion.subdomains.status,
-      'ansible_tags': argv.tags
+      'ansible_tags': argv.tags,
+      'ecs_min_size': config.ecs.hosts.counts.min,
+      'ecs_max_size': config.ecs.hosts.counts.max,
+      'ecs_desired_capacity': config.ecs.hosts.counts.desired,
     });
   }).then(function(result) {
     removeAnsibleVars();

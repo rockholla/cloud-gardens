@@ -71,7 +71,10 @@ exports.awsHandler = function(argv) {
     'bastion_instance_type': config.bastion.type,
     'hosted_zone_id': result.hostedZoneId,
     'ci_subdomain': config.bastion.subdomains.ci,
-    'status_subdomain': config.bastion.subdomains.status
+    'status_subdomain': config.bastion.subdomains.status,
+    'ecs_min_size': config.ecs.hosts.counts.min,
+    'ecs_max_size': config.ecs.hosts.counts.max,
+    'ecs_desired_capacity': config.ecs.hosts.counts.desired,
   });
   }).then(function(result) {
     graphPath = path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, '.graphs');

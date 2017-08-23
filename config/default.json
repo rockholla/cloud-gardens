@@ -36,5 +36,14 @@
       "ci": "ci",
       "status": "status"
     }
+  },
+  "ecs": {
+    "hosts": {
+      "counts": {
+        "min": 1,
+        "max": 10,
+        "desired": 2
+      }
+    }
   }
 }

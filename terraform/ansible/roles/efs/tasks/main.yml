@@ -1,0 +1,25 @@
+- name: Ensure EFS destintation directory exists
+  file:
+    path: "{{ efs_mount_dest }}"
+    state: directory
+  when: efs_mount_dest != ''
+
+- name: Check to see if the EFS is already mounted
+  shell: >
+    df --type nfs4 | grep '{{ efs_mount_dest }}' | cat
+  when: (efs_mount_dest != '') and (efs_mount_target != '')
+  register: efs_mount_check
+  changed_when: false
+
+- name: Mount the EFS
+  shell: >
+    mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 {{ efs_mount_target }}:/ {{ efs_mount_dest }}
+  when: (efs_mount_dest != '') and (efs_mount_target != '') and (efs_mount_check.stdout == '')
+  args:
+    warn: no
+
+- name: Ensure the EFS is mounted on boot
+  lineinfile:
+    line: "{{ efs_mount_target }}:/ {{ efs_mount_dest }} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0"
+    dest: /etc/fstab
+  when: (efs_mount_dest != '') and (efs_mount_target != '')

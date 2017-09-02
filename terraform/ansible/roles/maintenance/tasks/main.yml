@@ -1,0 +1,24 @@
+---
+- name: Add a cron job to clean the tmp directory (remove items older than 10 days)
+  cron:
+    name: "clean tmp"
+    hour: 1
+    job: "find /tmp -ctime +10 -exec rm -rf {} +"
+    state: present
+
+- name: Add a cron job to clean docker artifacts for the jenkins user
+  cron:
+    name: "clean docker artifacts"
+    hour: 1
+    job: >
+      docker ps -a | grep Exit | cut -d ' ' -f 1 | xargs sudo docker rm && docker rmi $(docker images -f "dangling=true" -q)
+    user: jenkins
+    state: present
+
+- name: Add cron job to backup /var/lib/jenkins to s3 every 6 hours
+  cron:
+    name: "backup jenkins garden directory"
+    minute: 0
+    hour: "*/6"
+    job: "/bin/tar -zcvf /tmp/jenkins.tar.gz /var/lib/jenkins/ && /usr/local/bin/aws s3 cp /tmp/jenkins.tar.gz s3://{{ garden_s3_bucket_backups }}/jenkins-$(date +%Y-%m-%d_%H:%M:%S).tar.gz"
+    state: present

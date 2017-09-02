@@ -61,21 +61,9 @@ exports.awsHandler = function(argv) {
   winston.info('Prepping prior to terraforming');
   gardener.terraformPrep(config.domain).then(function(result) {
       stateBucket = result.stateBucket;
-      return gardener.terraform('destroy', result.stateBucket, {
-        'name': argv.garden,
-        'domain': config.domain,
-        'letsencrypt_enabled': config.letsencrypt.enabled,
-        'letsencrypt_ca': config.letsencrypt.ca,
-        'letsencrypt_registration_info_base64': config.letsencrypt.registration_info ? (new Buffer(JSON.stringify(config.letsencrypt.registration_info)).toString('base64')) : null,
-        'letsencrypt_account_key_base64': config.letsencrypt.account_key ? (new Buffer(config.letsencrypt.account_key).toString('base64')) : null,
-        'key_name': argv.garden + gardener.keyNameSuffix + '.key',
-        'hosted_zone_id': result.hostedZoneId,
-        'ci_subdomain': config.bastion.subdomains.ci,
-        'status_subdomain': config.bastion.subdomains.status,
-        'ecs_min_size': config.ecs.hosts.counts.min,
-        'ecs_max_size': config.ecs.hosts.counts.max,
-        'ecs_desired_capacity': config.ecs.hosts.counts.desired,
-      });
+      return gardener.terraform('destroy',
+                                stateBucket,
+                                Gardens.Aws.getTerraformArgs(argv, config, argv.garden + gardener.keyNameSuffix + '.key', result.hostedZoneId));
     }).then(function(result) {
       winston.info("Done razing the garden");
       winston.warn("Some resources created during gardening are left intact after a raze:");

@@ -69,23 +69,6 @@ variable "ami_id" {
   description = "the AMI ID to use for the bastion instance(s)"
 }
 
-variable "letsencrypt_enabled" {
-  description = "whether or not to use LetsEncrypt as the SSL cert provider"
-  default = "yes"
-}
-
-variable "letsencrypt_ca" {
-  description = "the uri to the LetsEncrypt certificate authority, useful in setting for production vs staging"
-}
-
-variable "letsencrypt_registration_info_base64" {
-  description = "registration info base64 encoded"
-}
-
-variable "letsencrypt_account_key_base64" {
-  description = "pem key based64 encoded"
-}
-
 variable "ecs_cluster_name" {
   description = "The name of the ECS cluster for this garden"
 }
@@ -97,6 +80,15 @@ variable "region" {
 variable "ansible_tags" {
   description = "A comma-delimited list of ansible tags"
   default = "all"
+}
+
+variable "vpc_id" {
+  description = "The VPC where the bastion will live"
+}
+
+variable "s3_bucket_names" {
+  type = "map"
+  description = "the ids/names of the garden s3 buckets"
 }
 
 resource "aws_instance" "bastion" {
@@ -118,6 +110,14 @@ resource "aws_instance" "bastion" {
     Name    = "${var.garden}-bastion-${count.index + 1}"
     Garden  = "${var.garden}"
   }
+}
+
+module "jenkins_efs" {
+  source                    = "./jenkins-efs"
+  garden                    = "${var.garden}"
+  vpc_id                    = "${var.vpc_id}"
+  bastion_security_group_id = "${element(split(",",var.security_groups), 0)}"
+  subnet_id                 = "${var.subnet_id}"
 }
 
 resource "null_resource" "bastion_setup" {
@@ -194,23 +194,17 @@ resource "null_resource" "bastion_set_terraform_overrides" {
       host        = "${element(aws_instance.bastion.*.public_ip, count.index)}"
     }
     content = <<EOF
-domain: "${var.domain}"
 hosted_zone_id: "${var.hosted_zone_id}"
-garden: "${var.garden}"
 aws_access_key_id: "${var.aws_admin_id}"
 aws_secret_access_key: "${var.aws_admin_secret}"
 aws_user_paths:
   - { path: /home/ubuntu, owner: ubuntu, group: ubuntu }
   - { path: /root, owner: root, group: ubuntu }
-traefik_ci_subdomain: "${var.ci_subdomain}"
-traefik_status_subdomain: "${var.status_subdomain}"
-traefik_ecs_region: "${var.region}"
 traefik_ecs_cluster_name: "${var.ecs_cluster_name}"
-letsencrypt_enabled: ${var.letsencrypt_enabled}
-letsencrypt_ca: "${var.letsencrypt_ca}"
-letsencrypt_registration_info_base64: "${var.letsencrypt_registration_info_base64}"
-letsencrypt_account_key_base64: "${var.letsencrypt_account_key_base64}"
 bastion_is_master: ${count.index == 0 ? "yes" : "no"}
+bastion_jenkins_mount_target: "${module.jenkins_efs.mount_target}"
+garden_s3_bucket_primary: "${var.s3_bucket_names["primary"]}"
+garden_s3_bucket_backups: "${var.s3_bucket_names["backups"]}"
 EOF
     destination = "/home/ubuntu/ansible/vars/overrides/terraform.yml"
   }
@@ -319,4 +313,8 @@ output "status_url" {
 
 output "done_output" {
   value = "${data.external.done.result}"
+}
+
+output "jenkins_efs_mount_target" {
+  value = "${module.jenkins_efs.mount_target}"
 }

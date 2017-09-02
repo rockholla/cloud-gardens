@@ -19,6 +19,7 @@
         - ca-certificates
         - software-properties-common
         - git
+        - nfs-common
 
     - name: Ensure pip is installed
       easy_install:
@@ -37,6 +38,10 @@
       tags: [ always ]
 
   roles:
+    - role: efs
+      efs_mount_target: "{{ bastion_jenkins_mount_target }}"
+      efs_mount_dest: "/var/lib/jenkins"
+      tags: [ efs, jenkins ]
     - { role: aws, tags: [ jenkins, aws ] }
     - { role: bcrypt, tags: [ bcrypt ] }
     - role: ssl
@@ -46,13 +51,14 @@
       letsencrypt_domains: ["{{ domain }}","{{ ci_subdomain }}.{{ domain }}","{{ status_subdomain }}.{{ domain }}"]
       letsencrypt_init_domains: ["{{ lookup('pipe','date +%Y%m%d%H%M%S') }}.{{ domain }}"]
       tags: [ ssl ]
-    - { role: geerlingguy.jenkins, jenkins_plugins: [], tags: [ jenkins ] }
+    - { role: geerlingguy.jenkins, tags: [ jenkins ] }
     - { role: jenkins, tags: [ jenkins ] }
     - role: aws
       aws_user_paths: [ { path: /var/lib/jenkins, owner: jenkins, group: jenkins } ]
       tags: [ aws, jenkins ]
     - { role: traefik, when: bastion_master_ready, tags: [ ssl, traefik ] }
     - { role: logrotate, tags: [ logrotate ] }
+    - { role: maintenance, tags: [ maintenance ] }
 
   tasks:
 

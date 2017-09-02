@@ -10,6 +10,11 @@ terraform {
   }
 }
 
+provider "aws" {
+  profile = "${var.profile}"
+  region = "${var.region}"
+}
+
 variable "profile" {
   description = "the AWS profile to use"
 }
@@ -20,30 +25,6 @@ variable "region" {
 
 variable "account_id" {
   description = "the AWS account ID"
-}
-
-variable "letsencrypt_enabled" {
-  description = "whether or not to use LetsEncrypt as the SSL cert provider"
-  default = "yes"
-}
-
-variable "letsencrypt_ca" {
-  description = "the uri to the LetsEncrypt certificate authority, useful in setting for production vs staging"
-}
-
-variable "letsencrypt_registration_info_base64" {
-  description = "registration info base64 encoded"
-  default = ""
-}
-
-variable "letsencrypt_account_key_base64" {
-  description = "pem key based64 encoded"
-  default = ""
-}
-
-provider "aws" {
-  profile = "${var.profile}"
-  region = "${var.region}"
 }
 
 variable "name" {
@@ -176,17 +157,17 @@ variable "ecs_ami" {
 
 variable "default_ecs_ami" {
   default = {
-    us-east-1       = "ami-0e297018"
-    us-east-2       = "ami-43d0f626"
-    us-west-1       = "ami-fcd7f59c"
-    us-west-2       = "ami-596d6520"
-    eu-west-1       = "ami-5ae4f83c"
-    eu-west-2       = "ami-ada6b1c9"
-    eu-central-1    = "ami-25a4004a"
-    ap-northeast-1  = "ami-3a000e5d"
-    ap-southeast-1  = "ami-2428ab47"
-    ap-southeast-2  = "ami-ac5849cf"
-    ca-central-1    = "ami-8cfb44e8"
+    us-east-1       = "ami-9eb4b1e5"
+    us-east-2       = "ami-1c002379"
+    us-west-1       = "ami-4a2c192a"
+    us-west-2       = "ami-1d668865"
+    eu-west-1       = "ami-8fcc32f6"
+    eu-west-2       = "ami-cb1101af"
+    eu-central-1    = "ami-0460cb6b"
+    ap-northeast-1  = "ami-b743bed1"
+    ap-southeast-1  = "ami-9d1f7efe"
+    ap-southeast-2  = "ami-c1a6bda2"
+    ca-central-1    = "ami-b677c9d2"
   }
 }
 
@@ -228,6 +209,13 @@ module "security_groups" {
   cidr        = "${var.cidr}"
 }
 
+module "s3" {
+  source      = "./s3"
+  garden      = "${var.name}"
+  account_id  = "${var.account_id}"
+  region      = "${var.region}"
+}
+
 module "ecs_cluster" {
   source                      = "./ecs-cluster"
   name                        = "${var.name}-ecs-cluster"
@@ -258,6 +246,8 @@ module "bastion" {
   garden                                = "${var.name}"
   profile                               = "${var.profile}"
   domain                                = "${var.domain}"
+  region                                = "${var.region}"
+  vpc_id                                = "${module.vpc.id}"
   security_groups                       = "${module.security_groups.bastion},${module.security_groups.internal_ssh}"
   ami_id                                = "${coalesce(var.bastion_ami, data.aws_ami.default_bastion_ami.id)}"
   subnet_id                             = "${element(module.vpc.external_subnets, 0)}"
@@ -270,34 +260,39 @@ module "bastion" {
   instance_count                        = "${var.bastion_count}"
   aws_admin_id                          = "${module.iam.admin_user_id}"
   aws_admin_secret                      = "${module.iam.admin_user_secret}"
-  letsencrypt_enabled                   = "${var.letsencrypt_enabled}"
-  letsencrypt_ca                        = "${var.letsencrypt_ca}"
-  letsencrypt_registration_info_base64  = "${var.letsencrypt_registration_info_base64}"
-  letsencrypt_account_key_base64        = "${var.letsencrypt_account_key_base64}"
-  region                                = "${var.region}"
   ecs_cluster_name                      = "${module.ecs_cluster.name}"
   ansible_tags                          = "${var.ansible_tags}"
+  s3_bucket_names                       = "${module.s3.bucket_names}"
 }
 
 module "customizations" {
   source                  = "./.custom"
-  garden                  = "${var.name}"
-  profile                 = "${var.profile}"
-  domain                  = "${var.domain}"
-  hosted_zone_id          = "${var.hosted_zone_id}"
-  key_name                = "${var.key_name}"
-  vpc_id                  = "${module.vpc.id}"
-  vpc_internal_subnets    = "${module.vpc.internal_subnets}"
-  vpc_external_subnets    = "${module.vpc.external_subnets}"
-  bastion_security_group  = "${module.security_groups.bastion}"
-  ecs_security_group      = "${module.ecs_cluster.security_group}"
-  bastion_ips             = "${module.bastion.external_ips}"
-  bastion_done_output     = "${module.bastion.done_output}"
+  garden_output           = {
+    garden                  = "${var.name}"
+    profile                 = "${var.profile}"
+    domain                  = "${var.domain}"
+    hosted_zone_id          = "${var.hosted_zone_id}"
+    key_name                = "${var.key_name}"
+    vpc_id                  = "${module.vpc.id}"
+    vpc_internal_subnets    = "${module.vpc.internal_subnets}"
+    vpc_external_subnets    = "${module.vpc.external_subnets}"
+    bastion_security_group  = "${module.security_groups.bastion}"
+    ecs_security_group      = "${module.ecs_cluster.security_group}"
+    bastion_ips             = "${module.bastion.external_ips}"
+    bastion_done_output     = "${module.bastion.done_output}"
+  }
 }
 
 // The region in which the infra lives.
 output "region" {
   value = "${var.region}"
+}
+
+output "s3_buckets" {
+  value = {
+    "names" = "${module.s3.bucket_names}"
+    "uris" = "${module.s3.bucket_uris}"
+  }
 }
 
 // The bastion host IPs.
@@ -313,6 +308,10 @@ output "status_url" {
 // The CI server URL
 output "ci_url" {
   value = ["${module.bastion.ci_url}"]
+}
+
+output "jenkins_efs_mount_target" {
+  value = "${module.bastion.jenkins_efs_mount_target}"
 }
 
 // Comma separated list of internal subnet IDs.

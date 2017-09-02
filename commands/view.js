@@ -58,24 +58,9 @@ exports.awsHandler = function(argv) {
     return gardener.terraformPrep(config.domain);
   }).then(function(result) {
     stateBucket = result.stateBucket;
-    return gardener.terraform('output', stateBucket, {
-    'name': argv.garden,
-    'domain': config.domain,
-    'key_name': keyName,
-    'letsencrypt_enabled': config.letsencrypt.enabled,
-    'letsencrypt_ca': config.letsencrypt.ca,
-    'letsencrypt_registration_info_base64': config.letsencrypt.registration_info ? (new Buffer(JSON.stringify(config.letsencrypt.registration_info)).toString('base64')) : null,
-    'letsencrypt_account_key_base64': config.letsencrypt.account_key ? (new Buffer(config.letsencrypt.account_key).toString('base64')) : null,
-    'bastion_ami': config.bastion.ami,
-    'bastion_count': config.bastion.count,
-    'bastion_instance_type': config.bastion.type,
-    'hosted_zone_id': result.hostedZoneId,
-    'ci_subdomain': config.bastion.subdomains.ci,
-    'status_subdomain': config.bastion.subdomains.status,
-    'ecs_min_size': config.ecs.hosts.counts.min,
-    'ecs_max_size': config.ecs.hosts.counts.max,
-    'ecs_desired_capacity': config.ecs.hosts.counts.desired,
-  });
+    return gardener.terraform('output',
+                              stateBucket,
+                              Gardens.Aws.getTerraformArgs(argv, config, keyName, result.hostedZoneId));
   }).then(function(result) {
     graphPath = path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, '.graphs');
     mkdirp.sync(graphPath);

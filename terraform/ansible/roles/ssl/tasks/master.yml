@@ -71,7 +71,7 @@
 
 - set_fact:
     use_configured_letsencrypt_account: yes
-  when: letsencrypt_enabled and ((letsencrypt_registration_info_base64|default(None)) != None) and ((letsencrypt_account_key_base64|default(None)) != None)
+  when: letsencrypt_enabled and ((letsencrypt_registration_info_base64|default('')) != '') and ((letsencrypt_account_key_base64|default('')) != '')
 
 - name: Initialize accounts area, accept terms
   shell: >
@@ -140,3 +140,27 @@
     hour: 0
     minute: 0
   when: letsencrypt_enabled
+
+- name: Ensure that ssl cert directory exists for domain
+  file:
+    path: "/etc/ssl/certs/{{ domain }}"
+    state: directory
+    mode: 0700
+  when: not letsencrypt_enabled
+  notify: restart traefik
+
+- name: Ensure that ssl private key is in place
+  copy:
+    content: "{{ ssl_cert_key_base64 | b64decode }}"
+    dest: "/etc/ssl/certs/{{ domain }}/privkey.pem"
+    mode: 0600
+  when: not letsencrypt_enabled
+  notify: restart traefik
+
+- name: Ensure that ssl cert is in place
+  copy:
+    content: "{{ ssl_cert_bundle_base64 | b64decode }}"
+    dest: "/etc/ssl/certs/{{ domain }}/fullchain.pem"
+    mode: 0600
+  when: not letsencrypt_enabled
+  notify: restart traefik

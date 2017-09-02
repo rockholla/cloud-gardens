@@ -25,98 +25,12 @@
   with_items:
     - docker-engine
 
-- name: Get the hashed admin user password
-  shell: >
-    currenthash=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('/var/lib/jenkins/users/admin/config.xml').find('.//passwordHash').text.replace('#jbcrypt:', ''))"); /usr/local/bin/print-password-hash.py "${currenthash}" "{{ jenkins_admin_password }}"
-  register: jenkins_admin_password_bcrypt
-  changed_when: false
-
-- name: See if our admin user already exists
-  stat:
-    path: /var/lib/jenkins/users/{{ jenkins_admin_username }}
-  register: admin_user_dir
-  changed_when: false
-
-- name: Copy default admin record to our new user record
-  command: >
-    cp -r /var/lib/jenkins/users/admin /var/lib/jenkins/users/{{ jenkins_admin_username }}
-  when: not admin_user_dir.stat.exists
-  notify: restart jenkins
-
-- name: Set our admin user password
-  lineinfile:
-    dest: /var/lib/jenkins/users/{{ jenkins_admin_username }}/config.xml
-    regexp: '^\s+<passwordHash>.*<\/passwordHash>'
-    line: "      <passwordHash>#jbcrypt:{{ jenkins_admin_password_bcrypt.stdout }}</passwordHash>"
-  notify: restart jenkins
-
-- name: Set our new users fullName
-  lineinfile:
-    dest: /var/lib/jenkins/users/{{ jenkins_admin_username }}/config.xml
-    regexp: '^\s+<fullName>.*<\/fullName>$'
-    line: "  <fullName>{{ jenkins_admin_username }}</fullName>"
-  notify: restart jenkins
-
-- meta: flush_handlers
-
-- name: Make sure Jenkins is running before continuing
-  shell: "curl -D - --silent --max-time 5 http://{{ jenkins_hostname }}:{{ jenkins_http_port }}{{ jenkins_url_prefix }}/cli/"
-  register: result
-  until: (result.stdout.find("403 Forbidden") != -1) or (result.stdout.find("200 OK") != -1) and (result.stdout.find("Please wait while") == -1)
-  retries: "{{ jenkins_connection_retries }}"
-  delay: "{{ jenkins_connection_delay }}"
-  changed_when: false
-
-- name: Install Jenkins plugins
-  jenkins_plugin:
-    name: "{{ item }}"
-    state: present
-    with_dependencies: yes
-    params:
-      url_username: "{{ jenkins_admin_username }}"
-      url_password: "{{ jenkins_admin_password }}"
-      url: "http://{{ jenkins_hostname }}:{{ jenkins_http_port }}{{ jenkins_url_prefix }}"
-  with_items: "{{ jenkins_plugins }}"
-  notify: restart jenkins
-
-- name: Copy plugin files for install
-  copy:
-    src: "files/{{ item }}"
-    dest: "/var/lib/jenkins/plugins/{{ item }}"
-    owner: jenkins
-    group: jenkins
-  with_items:
-    - "scriptler-2.9.hpi"
-    - "uno-choice-1.5.3.hpi"
-  notify: restart jenkins
-
-- name: Move warning config file into place
-  copy:
-    src: files/jenkins.security.UpdateSiteWarningsConfiguration.xml
-    dest: /var/lib/jenkins/jenkins.security.UpdateSiteWarningsConfiguration.xml
-    owner: jenkins
-    group: jenkins
-    mode: 0644
-  notify: restart jenkins
-
 - name: Ensure .garden directory exists for the Jenkins environment
   file:
     path: /var/lib/jenkins/.garden
     state: directory
     owner: jenkins
     group: jenkins
-
-- name: Ensure jenkins garden bash config file exists with necessary values
-  blockinfile:
-    create: yes
-    marker: "# {mark} ANSIBLE MANAGED BLOCK default"
-    dest: "/var/lib/jenkins/.garden/config"
-    owner: "jenkins"
-    group: "jenkins"
-    block: |
-      garden="{{ garden }}"
-      domain="{{ domain }}"
-      hosted_zone_id="{{ hosted_zone_id }}"
 
 - name: Copy .profile content in place for jenkins user
   blockinfile:
@@ -148,6 +62,15 @@
       else
         start_agent;
       fi
+
+      export GARDEN="{{ garden }}"
+      export DOMAIN="{{ domain }}"
+      export HOSTED_ZONE_ID="{{ hosted_zone_id }}"
+      export GITHUB_ORGANIZATION="{{ github_organization }}"
+      export GITHUB_DEPLOYER_USERNAME="{{ github_deployer_username }}"
+      export GITHUB_DEPLOYER_PASSWORD="{{ github_deployer_password }}"
+
+      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
     mode: 0644
     owner: jenkins
     group: jenkins
@@ -200,3 +123,78 @@
     mode: 0600
     owner: jenkins
     group: jenkins
+
+- name: Ensure the id_rsa content is set to the github deployer ssh key if that value is set
+  copy:
+    content: "{{ github_deployer_ssh_key_base64 | b64decode }}"
+    dest: /var/lib/jenkins/.ssh/id_rsa
+    mode: 0600
+    owner: jenkins
+    group: jenkins
+
+- name: Ensure garden-required jenkins config files/values are in place
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: jenkins
+    group: jenkins
+    mode: 0644
+  with_items:
+    - { src: "jenkins.CLI.xml", dest: "/var/lib/jenkins/jenkins.CLI.xml" }
+    - { src: "slave-to-master-security-kill-switch", dest: "/var/lib/jenkins/secrets/slave-to-master-security-kill-switch" }
+
+- name: Ensure userContent contents are copied over
+  copy:
+    src: files/userContent/
+    dest: /var/lib/jenkins/userContent/
+    directory_mode: yes
+    owner: jenkins
+    group: jenkins
+    mode: 0755
+
+- name: Ensure custom theme configuration is in place
+  template:
+    src: templates/org.codefirst.SimpleThemeDecorator.xml.j2
+    dest: /var/lib/jenkins/org.codefirst.SimpleThemeDecorator.xml
+    owner: jenkins
+    group: jenkins
+  notify: restart jenkins
+
+- name: Ensure the .garden/repos.properties file exists
+  lineinfile:
+    create: yes
+    path: /var/lib/jenkins/.garden/repos-branches.properties
+    line: "Repo\tBranch"
+    insertbefore: BOF
+    owner: jenkins
+    group: jenkins
+
+- name: Ensure jobs directories are in place
+  file:
+    path: "/var/lib/jenkins/jobs/{{ item }}"
+    state: directory
+    owner: jenkins
+    group: jenkins
+  with_items: "{{ jenkins_jobs }}"
+
+- name: Ensure job configs are in place
+  copy:
+    src: "files/jobs/{{ item }}.config.xml"
+    dest: "/var/lib/jenkins/jobs/{{ item }}/config.xml"
+  with_items: "{{ jenkins_jobs }}"
+  notify: restart jenkins
+
+- name: Ensure the scripts directory exists
+  file:
+    path: /var/lib/jenkins/scripts
+    state: directory
+    owner: jenkins
+    group: jenkins
+
+- name: Ensure all standalone scripts are in place
+  copy:
+    src: files/scripts/
+    dest: /var/lib/jenkins/scripts/
+    owner: jenkins
+    group: jenkins
+    mode: u=rwx,g=rx,u=rx

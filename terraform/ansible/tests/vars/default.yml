@@ -1,0 +1,21 @@
+---
+domain: "rockholla.org"
+hosted_zone_id: "12345"
+garden: "cloud-garden-tests"
+aws_access_key_id: ""
+aws_secret_access_key: ""
+aws_user_paths:
+  - { path: /home/ubuntu, owner: ubuntu, group: ubuntu }
+  - { path: /root, owner: root, group: ubuntu }
+traefik_ci_subdomain: "ci"
+traefik_status_subdomain: "status"
+traefik_ecs_region: "us-west-2"
+traefik_ecs_cluster_name: "cloud-garden-tests-cluster"
+letsencrypt_enabled: yes
+letsencrypt_ca: "https://acme-staging.api.letsencrypt.org/directory"
+letsencrypt_registration_info_base64: ""
+letsencrypt_account_key_base64: ""
+ssl_cert_key_base64: ""
+ssl_cert_bundle_base64: ""
+bastion_is_master: yes
+bastion_jenkins_mount_target:

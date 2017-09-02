@@ -17,11 +17,17 @@
     "region": null,
     "profile": "default"
   },
-  "letsencrypt": {
-    "enabled": true,
-    "ca": "https://acme-v01.api.letsencrypt.org/directory",
-    "registration_info": null,
-    "account_key": null
+  "ssl": {
+    "letsencrypt": {
+      "enabled": true,
+      "ca": "https://acme-v01.api.letsencrypt.org/directory",
+      "registration_info": "",
+      "account_key": ""
+    },
+    "cert": {
+      "key": "",
+      "bundle": ""
+    }
   },
   "bastion": {
     "count": 1,
@@ -30,7 +36,8 @@
     "ami": null,
     "services": {
       "username": "bastion",
-      "password": "bastion"
+      "password": "bastion",
+      "token": "bastion"
     },
     "subdomains": {
       "ci": "ci",
@@ -41,9 +48,16 @@
     "hosts": {
       "counts": {
         "min": 1,
-        "max": 10,
-        "desired": 2
+        "max": 5,
+        "desired": 1
       }
+    }
+  },
+  "github": {
+    "deployer": {
+      "username": "",
+      "token": "",
+      "ssh_key": ""
     }
   }
 }

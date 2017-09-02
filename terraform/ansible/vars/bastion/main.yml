@@ -24,13 +24,16 @@ jenkins_url_prefix: "/"
 jenkins_connection_delay: 5
 jenkins_connection_retries: 60
 jenkins_plugins:
-  - extensible-choice-parameter
-  - permissive-script-security
-  - token-macro
-  - git-server
-jenkins_java_options: "-Djenkins.install.runSetupWizard=false -Dpermissive-script-security.enabled=true"
+  - extended-choice-parameter
+  - simple-theme-plugin
+jenkins_java_options: "-Djenkins.install.runSetupWizard=false"
 
 traefik_status_port: 9000
 traefik_ci_port: "{{ jenkins_http_port }}"
 traefik_status_username: "{{ bastion_services_username }}"
 traefik_status_password: "{{ bastion_services_password }}"
+
+efs_mount_target: ""
+
+garden_s3_bucket_primary: ""
+garden_s3_bucket_backups: ""

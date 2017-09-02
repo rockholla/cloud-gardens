@@ -1,5 +1,5 @@
 ---
-- name: Install logrotate
+- name: Ensure logrotate is installed
   apt:
     name: logrotate
     state: installed

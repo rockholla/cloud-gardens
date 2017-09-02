@@ -12,7 +12,7 @@ var baseConfig      = require('config');
 var config          = null;
 
 exports.command = 'tend [garden]';
-exports.desc = 'for starting or maintaining a garden.  A garden is a collection of integration resources and application environments (dev, testing, etc), all in its own cloud ecosystem.';
+exports.desc = 'for starting or maintaining a garden. A garden is a collection of integration resources and application environments (dev, testing, etc), all in its own cloud ecosystem.';
 
 function writeAnsibleVars(argv) {
   fs.writeFileSync(
@@ -22,7 +22,20 @@ function writeAnsibleVars(argv) {
       domain: config.domain,
       bastion_services_username: config.bastion.services.username,
       bastion_services_password: config.bastion.services.password,
-      aws_region: argv.region
+      aws_region: argv.region,
+      traefik_ci_subdomain: config.bastion.subdomains.ci,
+      traefik_status_subdomain: config.bastion.subdomains.status,
+      traefik_ecs_region: argv.region,
+      letsencrypt_enabled: config.ssl.letsencrypt.enabled,
+      letsencrypt_ca: config.ssl.letsencrypt.ca,
+      letsencrypt_registration_info_base64: config.ssl.letsencrypt.registration_info ? (new Buffer(JSON.stringify(config.ssl.letsencrypt.registration_info)).toString('base64')) : "",
+      letsencrypt_account_key_base64: config.ssl.letsencrypt.account_key ? (new Buffer(config.ssl.letsencrypt.account_key).toString('base64')) : "",
+      ssl_cert_key_base64: config.ssl.cert.key ? (new Buffer(config.ssl.cert.key).toString('base64')) : "",
+      ssl_cert_bundle_base64: config.ssl.cert.bundle ? (new Buffer(config.ssl.cert.bundle).toString('base64')) : "",
+      github_organization: config.github.organization,
+      github_deployer_username: config.github.deployer.username,
+      github_deployer_password: config.github.deployer.password,
+      github_deployer_ssh_key_base64: config.github.deployer.ssh_key ? (new Buffer(config.github.deployer.ssh_key).toString('base64')) : "",
     })
   );
 };
@@ -83,26 +96,9 @@ exports.awsHandler = function(argv) {
   }).then(function(result) {
     nameServers = result.nameServers;
     writeAnsibleVars(argv);
-    return gardener.terraform((argv.dryrun ? 'plan' : 'apply'), result.stateBucket, {
-      'name': argv.garden,
-      'domain': config.domain,
-      'key_name': keyName,
-      'letsencrypt_enabled': config.letsencrypt.enabled,
-      'letsencrypt_ca': config.letsencrypt.ca,
-      'letsencrypt_registration_info_base64': config.letsencrypt.registration_info ? (new Buffer(JSON.stringify(config.letsencrypt.registration_info)).toString('base64')) : null,
-      'letsencrypt_account_key_base64': config.letsencrypt.account_key ? (new Buffer(config.letsencrypt.account_key).toString('base64')) : null,
-      'bastion_ami': config.bastion.ami,
-      'bastion_count': config.bastion.count,
-      'bastion_instance_type': config.bastion.type,
-      'bastion_disk_size': config.bastion.disk_size,
-      'hosted_zone_id': result.hostedZoneId,
-      'ci_subdomain': config.bastion.subdomains.ci,
-      'status_subdomain': config.bastion.subdomains.status,
-      'ansible_tags': argv.tags,
-      'ecs_min_size': config.ecs.hosts.counts.min,
-      'ecs_max_size': config.ecs.hosts.counts.max,
-      'ecs_desired_capacity': config.ecs.hosts.counts.desired,
-    });
+    return gardener.terraform((argv.dryrun ? 'plan' : 'apply'),
+                              result.stateBucket,
+                              Gardens.Aws.getTerraformArgs(argv, config, keyName, result.hostedZoneId));
   }).then(function(result) {
     removeAnsibleVars();
     winston.info("Done tending the garden");

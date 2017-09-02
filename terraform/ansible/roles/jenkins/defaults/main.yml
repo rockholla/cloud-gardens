@@ -1,13 +1,7 @@
 ---
 garden: ""
 domain: ""
+ci_subdomain: ""
 hosted_zone_id: ""
-
-jenkins_hostname: "localhost"
-jenkins_http_port: 8080
-jenkins_url_prefix: "/"
-jenkins_connection_delay: 5
-jenkins_connection_retries: 60
-jenkins_admin_username: admin
-jenkins_admin_password: admin
-jenkins_plugins: []
+jenkins_jobs:
+  - build

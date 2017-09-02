@@ -1,6 +1,6 @@
 # Cloud Gardens: plant your projects, help them grow
 
-[![Build Status](https://travis-ci.org/rockholla/cloud-gardens.svg?branch=develop)](https://travis-ci.org/rockholla/cloud-gardens)
+[![Build Status](https://circleci.com/gh/rockholla/cloud-gardens/tree/develop.png?circle-token=e3e9f04ca5214129ee0b8b113b6f0073640a7b09)](https://circleci.com/gh/rockholla/cloud-gardens/)
 
 Requirements:
 

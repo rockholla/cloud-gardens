@@ -1,9 +1,9 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/cloud-gardens
     docker:
-      - image: circleci/node:7
+      - image: circleci/node:7.10
+    working_directory: ~/cloud-gardens
     steps:
       - checkout
       - run:
@@ -18,9 +18,6 @@ jobs:
       - run:
           name: remove-terraform-download
           command: 'rm -f terraform.zip'
-      - run:
-          name: update-npm
-          command: 'sudo npm install -g npm@latest'
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
@@ -33,14 +30,3 @@ jobs:
       - run:
           name: test
           command: npm test
-      - run:
-          name: code-coverage
-          command: './node_modules/.bin/nyc report --reporter=text-lcov'
-      - store_artifacts:
-          path: test-results.xml
-          prefix: tests
-      - store_artifacts:
-          path: coverage
-          prefix: coverage
-      - store_test_results:
-          path: test-results.xml

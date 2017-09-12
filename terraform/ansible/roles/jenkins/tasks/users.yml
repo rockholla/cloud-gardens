@@ -1,0 +1,61 @@
+---
+
+- name: Ensure init directory exists
+  file:
+    path: /var/lib/jenkins/init.groovy.d
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: 0775
+
+- name: Ensure our user cache directory exists
+  file:
+    path: /var/lib/jenkins/users.groovy
+    state: directory
+    owner: jenkins
+    group: jenkins
+
+- name: Ensure our admin user is created/up-to-date
+  template:
+    src: templates/add-update-user.groovy.j2
+    dest: "/var/lib/jenkins/users.groovy/{{ item.username }}.groovy"
+  with_items:
+    - username: "{{ jenkins_admin_username }}"
+      password: "{{ jenkins_admin_password }}"
+      admin: yes
+  register: admin_user
+
+- name: Ensure additional jenkins users are created/up-to-date
+  template:
+    src: templates/add-update-user.groovy.j2
+    dest: "/var/lib/jenkins/users.groovy/{{ item.username }}.groovy"
+  with_items: "{{ jenkins_users }}"
+  register: other_users
+
+- name: Copy user data into init directory if there are changes
+  shell: >
+    cp -r /var/lib/jenkins/users.groovy/* /var/lib/jenkins/init.groovy.d/ && chmod +x /var/lib/jenkins/init.groovy.d/*
+  register: users_copied
+  when: admin_user.changed or other_users.changed
+
+- name: Immediately restart Jenkins if we need to update users
+  service: name=jenkins state=restarted
+  when: (users_copied is defined) and users_copied.changed
+
+- name: Wait for Jenkins to start up before proceeding.
+  shell: "curl -D - --silent --max-time 5 http://localhost:8080/cli/"
+  register: result
+  until: (result.stdout.find("403 Forbidden") != -1) or (result.stdout.find("200 OK") != -1) and (result.stdout.find("Please wait while") == -1)
+  retries: 50
+  delay: 5
+  changed_when: false
+  check_mode: no
+  args:
+    warn: no
+
+- name: Remove init scripts
+  shell: >
+    rm -rf /var/lib/jenkins/init.groovy.d/*
+  changed_when: false
+  args:
+    warn: no

@@ -1,0 +1,17 @@
+---
+
+- name: Ensure jenkins apt key is present
+  apt_key:
+    url: https://pkg.jenkins.io/debian/jenkins-ci.org.key
+    state: present
+
+- name: Ensure jenkins apt repo is present
+  apt_repository:
+    repo: deb http://pkg.jenkins.io/debian-stable binary/
+    state: present
+    update_cache: yes
+
+- name: Ensure jenkins package is installed
+  apt:
+    name: jenkins
+    state: present

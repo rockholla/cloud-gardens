@@ -1,0 +1,30 @@
+#!groovy
+import hudson.security.*
+import jenkins.model.*
+
+def instance = Jenkins.getInstance()
+def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+def users = hudsonRealm.getAllUsers()
+users_s = users.collect { it.toString() }
+
+// Create the admin user account if it doesn't already exist.
+if ("{{ item.username }}" in users_s) {
+    println "user already exists - updating password"
+
+    def user = hudson.model.User.get('{{ item.username }}');
+    def password = hudson.security.HudsonPrivateSecurityRealm.Details.fromPlainPassword('{{ item.password }}')
+    user.addProperty(password)
+    user.save()
+}
+else {
+    println "Creating local user"
+
+    hudsonRealm.createAccount('{{ item.username }}', '{{ item.password }}')
+    instance.setSecurityRealm(hudsonRealm)
+
+    {% if ('admin' in item) and item.admin %}
+      def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+      instance.setAuthorizationStrategy(strategy)
+    {% endif %}
+    instance.save()
+}

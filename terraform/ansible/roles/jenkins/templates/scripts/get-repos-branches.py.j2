@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+
+import requests
+import json
+from requests.auth import HTTPBasicAuth
+
+print "Getting available repos and branches for the configured deploy user..."
+
+page = 1
+results = True
+repos = {}
+branchesUrls = {}
+while results:
+  response = requests.get('https://api.github.com/user/repos?type=all&page=' + str(page) + '&per_page=100', auth=HTTPBasicAuth('{{ github_deployer_username }}', '{{ github_deployer_token }}'))
+  if (response.ok):
+    reposJson = json.loads(response.text or response.content)
+    for repoJson in reposJson:
+      repos[repoJson['full_name']] = []
+      print 'found repo ' + repoJson['full_name']
+      branchesUrls[repoJson['full_name']] = repoJson['branches_url'].split('{')[0]
+    if len(reposJson) == 0:
+      results = False
+    page = page + 1
+  else:
+    results = False
+
+for repo in repos:
+  print 'finding branches for ' + repo + ' at ' + branchesUrls[repo] + '...'
+  response = requests.get(branchesUrls[repo], auth=HTTPBasicAuth('{{ github_deployer_username }}', '{{ github_deployer_token }}'))
+  if (response.ok):
+    branchesJson = json.loads(response.text or response.content)
+    for branchJson in branchesJson:
+      print 'found branch for repo ' + repo + ': ' + branchJson['name']
+      repos[repo].append(branchJson['name'])
+
+with open('/var/lib/jenkins/.garden/repos-branches.properties', 'w+') as f:
+  f.write("Repo\tBranch\n")
+  for repo in sorted(repos.iterkeys(), key=lambda s: s.lower()):
+    for branch in repos[repo]:
+      f.write(repo + "\t" + branch + "\n")
+  f.close()

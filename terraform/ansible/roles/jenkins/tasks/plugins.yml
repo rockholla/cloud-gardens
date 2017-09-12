@@ -1,0 +1,55 @@
+---
+- name: Wait for Jenkins to start up before proceeding.
+  shell: "curl -D - --silent --max-time 5 http://localhost:8080/cli/"
+  register: result
+  until: (result.stdout.find("403 Forbidden") != -1) or (result.stdout.find("200 OK") != -1) and (result.stdout.find("Please wait while") == -1)
+  retries: 50
+  delay: 5
+  changed_when: false
+  check_mode: no
+  args:
+    warn: no
+
+- name: Get the jenkins-cli jarfile from the Jenkins server.
+  get_url:
+    url: "http://localhost:8080/jnlpJars/jenkins-cli.jar"
+    dest: "/opt/jenkins-cli.jar"
+  register: jarfile_get
+  until: "'OK' in jarfile_get.msg or 'file already exists' in jarfile_get.msg"
+  retries: 5
+  delay: 10
+  check_mode: no
+
+# Jenkins doesn't allow updates via CLI, though that is required before plugins
+# can be installed via CLI. See: https://gist.github.com/rowan-m/1026918
+- name: Create Jenkins updates folder.
+  file:
+    path: /var/lib/jenkins/updates
+    owner: jenkins
+    group: jenkins
+    mode: 0755
+    state: directory
+  register: jenkins_plugins_folder_create
+
+- name: Update Jenkins plugin data.
+  shell: curl -L https://updates.jenkins-ci.org/update-center.json | sed '1d;$d' > "/var/lib/jenkins/updates/default.json"
+  args:
+    creates: /var/lib/jenkins/updates/default.json
+
+- name: Permissions for default.json updates info.
+  file:
+    path: /var/lib/jenkins/updates/default.json
+    owner: jenkins
+    group: jenkins
+    mode: 0755
+  when: jenkins_plugins_folder_create.changed
+
+- name: Install Jenkins plugins
+  command: >
+    java -jar /opt/jenkins-cli.jar -s http://localhost:8080/
+    install-plugin {{ item }}
+    --username {{ jenkins_admin_username }}
+    --password {{ jenkins_admin_password }}
+    creates="/var/lib/jenkins/plugins/{{ item }}.jpi"
+  with_items: "{{ jenkins_plugins }}"
+  notify: restart jenkins

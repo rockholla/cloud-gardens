@@ -1,24 +1,24 @@
 ---
-- name: Add a cron job to clean the tmp directory (remove items older than 10 days)
+- name: Add a cron job to clean the tmp directory (remove items older than 10 days) every day
   cron:
     name: "clean tmp"
     hour: 1
     job: "find /tmp -ctime +10 -exec rm -rf {} +"
     state: present
 
-- name: Add a cron job to clean docker artifacts for the jenkins user
+- name: Add a cron job to clean docker artifacts for the jenkins user every day
   cron:
     name: "clean docker artifacts"
-    hour: 1
+    hour: 2
     job: >
-      docker ps -a | grep Exit | cut -d ' ' -f 1 | xargs sudo docker rm && docker rmi $(docker images -f "dangling=true" -q)
+      docker system prune --force
     user: jenkins
     state: present
 
-- name: Add cron job to backup /var/lib/jenkins to s3 every 6 hours
+- name: Add cron job to backup /var/lib/jenkins to s3 every 3 hours
   cron:
     name: "backup jenkins garden directory"
     minute: 0
-    hour: "*/6"
-    job: "/bin/tar -zcvf /tmp/jenkins.tar.gz /var/lib/jenkins/ && /usr/local/bin/aws s3 cp /tmp/jenkins.tar.gz s3://{{ garden_s3_bucket_backups }}/jenkins-$(date +%Y-%m-%d_%H:%M:%S).tar.gz"
+    hour: "*/3"
+    job: "/bin/tar --exclude='/var/lib/jenkins/.garden/repos-branches' --exclude='/var/lib/jenkins/.garden/repos' --exclude='/var/lib/jenkins/.garden/test' -zcvf /tmp/jenkins.tar.gz /var/lib/jenkins/ && /usr/local/bin/aws s3 cp /tmp/jenkins.tar.gz s3://{{ garden_s3_bucket_backups }}/jenkins-$(date +%Y-%m-%d_%H:%M:%S).tar.gz"
     state: present

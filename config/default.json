@@ -31,21 +31,28 @@
   },
   "bastion": {
     "count": 1,
-    "type": "t2.micro",
+    "type": "t2.medium",
     "disk_size": 50,
     "ami": null,
     "services": {
       "username": "bastion",
-      "password": "bastion",
-      "token": "bastion"
+      "password": "bastion"
     },
     "subdomains": {
       "ci": "ci",
       "status": "status"
+    },
+    "jenkins": {
+      "users": [{
+        "username": "deployer",
+        "password": "deployer"
+      }]
     }
   },
   "ecs": {
     "hosts": {
+      "type": "t2.medium",
+      "disk_size": 50,
       "counts": {
         "min": 1,
         "max": 5,

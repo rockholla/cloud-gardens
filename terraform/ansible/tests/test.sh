@@ -24,9 +24,8 @@ cleanup () {
   docker build -t $image_name "$tests_dir" || exit 1
   docker run --detach --volume="$ansible_dir":/etc/ansible/cloud-gardens-tests:rw --name $container_id --privileged $image_name "tail -f /dev/null" || exit 1
 
-  printf "\n"
-
-  docker exec --tty $container_id env TERM=xterm ansible-galaxy install -r /etc/ansible/cloud-gardens-tests/requirements.yml || cleanup 1
+  #printf "\n"
+  # docker exec --tty $container_id env TERM=xterm ansible-galaxy install -r /etc/ansible/cloud-gardens-tests/requirements.yml || cleanup 1
 
   printf "\n"
 

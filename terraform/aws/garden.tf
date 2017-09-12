@@ -263,24 +263,24 @@ module "bastion" {
   ecs_cluster_name                      = "${module.ecs_cluster.name}"
   ansible_tags                          = "${var.ansible_tags}"
   s3_bucket_names                       = "${module.s3.bucket_names}"
+  s3_user_id                            = "${module.s3.user_id}"
+  s3_user_secret                        = "${module.s3.user_secret}"
 }
 
 module "customizations" {
   source                  = "./.custom"
-  garden_output           = {
-    garden                  = "${var.name}"
-    profile                 = "${var.profile}"
-    domain                  = "${var.domain}"
-    hosted_zone_id          = "${var.hosted_zone_id}"
-    key_name                = "${var.key_name}"
-    vpc_id                  = "${module.vpc.id}"
-    vpc_internal_subnets    = "${module.vpc.internal_subnets}"
-    vpc_external_subnets    = "${module.vpc.external_subnets}"
-    bastion_security_group  = "${module.security_groups.bastion}"
-    ecs_security_group      = "${module.ecs_cluster.security_group}"
-    bastion_ips             = "${module.bastion.external_ips}"
-    bastion_done_output     = "${module.bastion.done_output}"
-  }
+  garden                  = "${var.name}"
+  profile                 = "${var.profile}"
+  domain                  = "${var.domain}"
+  hosted_zone_id          = "${var.hosted_zone_id}"
+  key_name                = "${var.key_name}"
+  vpc_id                  = "${module.vpc.id}"
+  vpc_internal_subnets    = "${module.vpc.internal_subnets}"
+  vpc_external_subnets    = "${module.vpc.external_subnets}"
+  bastion_security_group  = "${module.security_groups.bastion}"
+  ecs_security_group      = "${module.ecs_cluster.security_group}"
+  bastion_ips             = "${module.bastion.external_ips}"
+  bastion_done_output     = "${module.bastion.done_output}"
 }
 
 // The region in which the infra lives.
@@ -308,10 +308,6 @@ output "status_url" {
 // The CI server URL
 output "ci_url" {
   value = ["${module.bastion.ci_url}"]
-}
-
-output "jenkins_efs_mount_target" {
-  value = "${module.bastion.jenkins_efs_mount_target}"
 }
 
 // Comma separated list of internal subnet IDs.

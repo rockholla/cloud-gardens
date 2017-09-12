@@ -91,6 +91,14 @@ variable "s3_bucket_names" {
   description = "the ids/names of the garden s3 buckets"
 }
 
+variable "s3_user_id" {
+  description = "the AWS s3 user access key id"
+}
+
+variable "s3_user_secret" {
+  description = "the AWS s3 user secret access key"
+}
+
 resource "aws_instance" "bastion" {
   count                  = "${var.instance_count}"
   ami                    = "${var.ami_id}"
@@ -110,14 +118,6 @@ resource "aws_instance" "bastion" {
     Name    = "${var.garden}-bastion-${count.index + 1}"
     Garden  = "${var.garden}"
   }
-}
-
-module "jenkins_efs" {
-  source                    = "./jenkins-efs"
-  garden                    = "${var.garden}"
-  vpc_id                    = "${var.vpc_id}"
-  bastion_security_group_id = "${element(split(",",var.security_groups), 0)}"
-  subnet_id                 = "${var.subnet_id}"
 }
 
 resource "null_resource" "bastion_setup" {
@@ -202,9 +202,10 @@ aws_user_paths:
   - { path: /root, owner: root, group: ubuntu }
 traefik_ecs_cluster_name: "${var.ecs_cluster_name}"
 bastion_is_master: ${count.index == 0 ? "yes" : "no"}
-bastion_jenkins_mount_target: "${module.jenkins_efs.mount_target}"
 garden_s3_bucket_primary: "${var.s3_bucket_names["primary"]}"
 garden_s3_bucket_backups: "${var.s3_bucket_names["backups"]}"
+garden_s3_user_access_key_id: "${var.s3_user_id}"
+garden_s3_user_secret_access_key: "${var.s3_user_secret}"
 EOF
     destination = "/home/ubuntu/ansible/vars/overrides/terraform.yml"
   }
@@ -313,8 +314,4 @@ output "status_url" {
 
 output "done_output" {
   value = "${data.external.done.result}"
-}
-
-output "jenkins_efs_mount_target" {
-  value = "${module.jenkins_efs.mount_target}"
 }

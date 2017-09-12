@@ -2,6 +2,7 @@
 domamin: ""
 garden: ""
 hosted_zone_id: ""
+aws_region: ""
 
 ci_subdomain: "ci"
 status_subdomain: "status"
@@ -14,22 +15,17 @@ bastion_master_ready: no
 bastion_services_username: bastion
 bastion_services_password: bastion
 
-jenkins_repo_url: "deb http://pkg.jenkins.io/debian-stable binary/"
-jenkins_repo_key_url: "https://pkg.jenkins.io/debian/jenkins-ci.org.key"
 jenkins_admin_username: "{{ bastion_services_username }}"
 jenkins_admin_password: "{{ bastion_services_password }}"
-jenkins_hostname: "localhost"
-jenkins_http_port: 8080
-jenkins_url_prefix: "/"
-jenkins_connection_delay: 5
-jenkins_connection_retries: 60
 jenkins_plugins:
   - extended-choice-parameter
+  - extensible-choice-parameter
   - simple-theme-plugin
+  - role-strategy
 jenkins_java_options: "-Djenkins.install.runSetupWizard=false"
 
 traefik_status_port: 9000
-traefik_ci_port: "{{ jenkins_http_port }}"
+traefik_ci_port: 8080
 traefik_status_username: "{{ bastion_services_username }}"
 traefik_status_password: "{{ bastion_services_password }}"
 

@@ -37,11 +37,17 @@
         ignore_files: ['.keep']
       tags: [ always ]
 
+    - stat:
+        path: "{{ playbook_dir }}/.custom/vars/bastion"
+      register: custom_bastion_vars
+      tags: [ always ]
+
+    - name: Include customization variables
+      include_vars:
+        dir: "{{ playbook_dir }}/.custom/vars/bastion"
+      tags: [ always ]
+
   roles:
-    - role: efs
-      efs_mount_target: "{{ bastion_jenkins_mount_target }}"
-      efs_mount_dest: "/var/lib/jenkins"
-      tags: [ efs, jenkins ]
     - { role: aws, tags: [ jenkins, aws ] }
     - { role: bcrypt, tags: [ bcrypt ] }
     - role: ssl
@@ -51,7 +57,6 @@
       letsencrypt_domains: ["{{ domain }}","{{ ci_subdomain }}.{{ domain }}","{{ status_subdomain }}.{{ domain }}"]
       letsencrypt_init_domains: ["{{ lookup('pipe','date +%Y%m%d%H%M%S') }}.{{ domain }}"]
       tags: [ ssl ]
-    - { role: geerlingguy.jenkins, tags: [ jenkins ] }
     - { role: jenkins, tags: [ jenkins ] }
     - role: aws
       aws_user_paths: [ { path: /var/lib/jenkins, owner: jenkins, group: jenkins } ]
@@ -65,8 +70,8 @@
     - stat:
         path: "{{ playbook_dir }}/.custom/bastion.yml"
       register: custom_bastion_include
-      tags: [ custom ]
+      tags: [ customizations ]
 
     - include: "{{ playbook_dir }}/.custom/bastion.yml"
       when: (custom_bastion_include is defined) and (custom_bastion_include.stat.exists)
-      tags: [ custom ]
+      tags: [ customizations ]

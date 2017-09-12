@@ -32,10 +32,10 @@ function writeAnsibleVars(argv) {
       letsencrypt_account_key_base64: config.ssl.letsencrypt.account_key ? (new Buffer(config.ssl.letsencrypt.account_key).toString('base64')) : "",
       ssl_cert_key_base64: config.ssl.cert.key ? (new Buffer(config.ssl.cert.key).toString('base64')) : "",
       ssl_cert_bundle_base64: config.ssl.cert.bundle ? (new Buffer(config.ssl.cert.bundle).toString('base64')) : "",
-      github_organization: config.github.organization,
       github_deployer_username: config.github.deployer.username,
-      github_deployer_password: config.github.deployer.password,
+      github_deployer_token: config.github.deployer.token,
       github_deployer_ssh_key_base64: config.github.deployer.ssh_key ? (new Buffer(config.github.deployer.ssh_key).toString('base64')) : "",
+      jenkins_users: config.bastion.jenkins.users
     })
   );
 };

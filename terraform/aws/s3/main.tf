@@ -29,9 +29,39 @@ resource "aws_s3_bucket" "garden_backups" {
     prefix  = ""
     enabled = true
     expiration {
-      days = 30
+      days = 14
     }
   }
+}
+
+resource "aws_iam_user" "s3_garden_user" {
+  name = "${var.garden}-s3-user"
+}
+
+resource "aws_iam_access_key" "s3_garden_user" {
+  user = "${aws_iam_user.s3_garden_user.name}"
+}
+
+resource "aws_iam_user_policy" "s3_garden_user" {
+  name = "test"
+    user = "${aws_iam_user.s3_garden_user.name}"
+    policy= <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::${aws_s3_bucket.garden_primary.id}",
+                "arn:aws:s3:::${aws_s3_bucket.garden_primary.id}/*",
+                "arn:aws:s3:::${aws_s3_bucket.garden_backups.id}",
+                "arn:aws:s3:::${aws_s3_bucket.garden_backups.id}/*"
+            ]
+        }
+   ]
+}
+EOF
 }
 
 output "bucket_uris" {
@@ -46,4 +76,12 @@ output "bucket_names" {
     "primary" = "${aws_s3_bucket.garden_primary.id}",
     "backups" = "${aws_s3_bucket.garden_backups.id}"
   }
+}
+
+output "user_id" {
+  value = "${aws_iam_access_key.s3_garden_user.id}"
+}
+
+output "user_secret" {
+  value = "${aws_iam_access_key.s3_garden_user.secret}"
 }

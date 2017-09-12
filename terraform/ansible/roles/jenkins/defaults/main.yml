@@ -1,7 +1,119 @@
 ---
 garden: ""
 domain: ""
+aws_region: ""
 ci_subdomain: ""
 hosted_zone_id: ""
 jenkins_jobs:
+  - refresh-repos-branches
   - build
+  - test
+  - deploy
+  - remove-deployment
+jenkins_build_additional_parameters_xml: ""
+jenkins_test_additional_parameters_xml: ""
+jenkins_deploy_additional_parameters_xml: ""
+jenkins_remove_deployment_additional_parameters_xml: ""
+
+github_deployer_username: ""
+github_deployer_token: ""
+
+jenkins_users: []
+
+jenkins_java_options: "-Djenkins.install.runSetupWizard=false"
+jenkins_admin_username: admin
+jenkins_admin_password: admin
+jenkins_init_changes:
+  - option: "JENKINS_ARGS"
+    value: "--prefix="
+  - option: JAVA_ARGS
+    value: "{{ jenkins_java_options }}"
+
+jenkins_config_elements:
+  - tag: authorizationStrategy
+    xml: |
+      <authorizationStrategy class="com.michelin.cio.hudson.plugins.rolestrategy.RoleBasedAuthorizationStrategy">
+        <roleMap type="projectRoles">
+          <role name="deployer-build" pattern="build">
+            <permissions>
+              <permission>hudson.model.Item.Cancel</permission>
+              <permission>hudson.model.Item.Read</permission>
+              <permission>hudson.model.Item.Build</permission>
+            </permissions>
+            <assignedSIDs>
+              <sid>deployer</sid>
+            </assignedSIDs>
+          </role>
+          <role name="deployer-deploy" pattern="deploy">
+            <permissions>
+              <permission>hudson.model.Item.Cancel</permission>
+              <permission>hudson.model.Item.Read</permission>
+              <permission>hudson.model.Item.Build</permission>
+            </permissions>
+            <assignedSIDs>
+              <sid>deployer</sid>
+            </assignedSIDs>
+          </role>
+          <role name="deployer-test" pattern="test">
+            <permissions>
+              <permission>hudson.model.Item.Cancel</permission>
+              <permission>hudson.model.Item.Read</permission>
+              <permission>hudson.model.Item.Build</permission>
+            </permissions>
+            <assignedSIDs>
+              <sid>deployer</sid>
+            </assignedSIDs>
+          </role>
+        </roleMap>
+        <roleMap type="globalRoles">
+          <role name="admin" pattern=".*">
+            <permissions>
+              <permission>hudson.model.View.Delete</permission>
+              <permission>hudson.model.Computer.Connect</permission>
+              <permission>hudson.model.Run.Delete</permission>
+              <permission>hudson.model.Hudson.UploadPlugins</permission>
+              <permission>hudson.model.Computer.Create</permission>
+              <permission>hudson.model.View.Configure</permission>
+              <permission>hudson.model.Hudson.ConfigureUpdateCenter</permission>
+              <permission>hudson.model.Computer.Build</permission>
+              <permission>hudson.model.Item.Configure</permission>
+              <permission>hudson.model.Hudson.Administer</permission>
+              <permission>hudson.model.Item.Cancel</permission>
+              <permission>hudson.model.Item.Read</permission>
+              <permission>hudson.model.Computer.Delete</permission>
+              <permission>hudson.model.Item.Build</permission>
+              <permission>hudson.model.Item.ExtendedRead</permission>
+              <permission>hudson.scm.SCM.Tag</permission>
+              <permission>hudson.model.Item.Discover</permission>
+              <permission>hudson.model.Hudson.Read</permission>
+              <permission>hudson.model.Item.Create</permission>
+              <permission>hudson.model.Item.Workspace</permission>
+              <permission>hudson.model.Computer.Provision</permission>
+              <permission>hudson.model.Item.WipeOut</permission>
+              <permission>hudson.model.View.Read</permission>
+              <permission>hudson.model.Hudson.RunScripts</permission>
+              <permission>hudson.model.View.Create</permission>
+              <permission>hudson.model.Computer.ExtendedRead</permission>
+              <permission>hudson.model.Item.Delete</permission>
+              <permission>hudson.model.Computer.Configure</permission>
+              <permission>hudson.model.Computer.Disconnect</permission>
+              <permission>hudson.model.Run.Artifacts</permission>
+              <permission>hudson.model.Run.Update</permission>
+            </permissions>
+            <assignedSIDs>
+              <sid>admin</sid>
+            </assignedSIDs>
+          </role>
+          <role name="deployer" pattern=".*">
+            <permissions>
+              <permission>hudson.model.Hudson.Read</permission>
+              <permission>hudson.model.Item.Cancel</permission>
+              <permission>hudson.model.Item.Build</permission>
+              <permission>hudson.model.View.Read</permission>
+            </permissions>
+            <assignedSIDs>
+              <sid>deployer</sid>
+            </assignedSIDs>
+          </role>
+        </roleMap>
+      </authorizationStrategy>

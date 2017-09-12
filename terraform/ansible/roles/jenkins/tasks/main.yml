@@ -1,5 +1,26 @@
 ---
 
+- include: install.yml
+
+- name: Ensure Jenkins is started and runs on startup.
+  service: name=jenkins state=started enabled=yes
+
+- include: settings.yml
+- include: users.yml
+- include: plugins.yml
+
+- name: Ensure required python packages are installed
+  pip:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - requests
+
+- name: Ensure ruamel.yaml package is installed
+  pip:
+    name: ruamel.yaml
+    state: present
+
 - name: Add docker apt key
   apt_key:
     keyserver: hkp://p80.pool.sks-keyservers.net:80
@@ -39,38 +60,18 @@
     dest: /var/lib/jenkins/.profile
     insertbefore: BOF
     block: |
-      #!/bin/bash
+      touch ~/.sudo_as_admin_successful
 
-      SSH_ENV="$HOME/.ssh/environment"
-
-      function start_agent {
-        echo "Initialising new SSH agent..."
-        /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
-        echo succeeded
-        chmod 600 "${SSH_ENV}"
-        . "${SSH_ENV}" > /dev/null
-        /usr/bin/ssh-add;
-      }
-
-      # Source SSH settings, if applicable
-      if [ -f "${SSH_ENV}" ]; then
-        . "${SSH_ENV}" > /dev/null
-        #ps ${SSH_AGENT_PID} doesn't work under cywgin
-        ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
-          start_agent;
-        }
-      else
-        start_agent;
-      fi
-
-      export GARDEN="{{ garden }}"
-      export DOMAIN="{{ domain }}"
-      export HOSTED_ZONE_ID="{{ hosted_zone_id }}"
-      export GITHUB_ORGANIZATION="{{ github_organization }}"
-      export GITHUB_DEPLOYER_USERNAME="{{ github_deployer_username }}"
-      export GITHUB_DEPLOYER_PASSWORD="{{ github_deployer_password }}"
-
-      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+      export GARDEN_NAME="{{ garden }}"
+      export GARDEN_DOMAIN="{{ domain }}"
+      export GARDEN_AWS_REGION="{{ aws_region }}"
+      export GARDEN_HOSTED_ZONE_ID="{{ hosted_zone_id }}"
+      export GARDEN_GITHUB_DEPLOYER_USERNAME="{{ github_deployer_username }}"
+      export GARDEN_GITHUB_DEPLOYER_TOKEN="{{ github_deployer_token }}"
+      export GARDEN_S3_BUCKET_PRIMARY="{{ garden_s3_bucket_primary }}"
+      export GARDEN_S3_BUCKET_BACKUPS="{{ garden_s3_bucket_backups }}"
+      export GARDEN_S3_ACCESS_KEY_ID="{{ garden_s3_user_access_key_id }}"
+      export GARDEN_S3_SECRET_ACCESS_KEY="{{ garden_s3_user_secret_access_key }}"
     mode: 0644
     owner: jenkins
     group: jenkins
@@ -106,6 +107,14 @@
     owner: jenkins
     group: jenkins
 
+- name: Ensure jenkins ssh config file is in place
+  copy:
+    src: files/ssh-config
+    dest: /var/lib/jenkins/.ssh/config
+    mode: 0400
+    owner: jenkins
+    group: jenkins
+
 - name: See if bastion_rsa file exists for jenkins
   stat:
     path: /var/lib/jenkins/.ssh/bastion_rsa
@@ -132,6 +141,14 @@
     owner: jenkins
     group: jenkins
 
+- name: Add in .gitconfig for jenkins
+  template:
+    src: templates/.gitconfig.j2
+    dest: /var/lib/jenkins/.gitconfig
+    mode: 0644
+    owner: jenkins
+    group: jenkins
+
 - name: Ensure garden-required jenkins config files/values are in place
   copy:
     src: "{{ item.src }}"
@@ -140,8 +157,9 @@
     group: jenkins
     mode: 0644
   with_items:
-    - { src: "jenkins.CLI.xml", dest: "/var/lib/jenkins/jenkins.CLI.xml" }
     - { src: "slave-to-master-security-kill-switch", dest: "/var/lib/jenkins/secrets/slave-to-master-security-kill-switch" }
+    - { src: "jenkins.CLI.xml", dest: "/var/lib/jenkins/jenkins.CLI.xml" }
+  notify: restart jenkins
 
 - name: Ensure userContent contents are copied over
   copy:
@@ -160,15 +178,6 @@
     group: jenkins
   notify: restart jenkins
 
-- name: Ensure the .garden/repos.properties file exists
-  lineinfile:
-    create: yes
-    path: /var/lib/jenkins/.garden/repos-branches.properties
-    line: "Repo\tBranch"
-    insertbefore: BOF
-    owner: jenkins
-    group: jenkins
-
 - name: Ensure jobs directories are in place
   file:
     path: "/var/lib/jenkins/jobs/{{ item }}"
@@ -178,9 +187,11 @@
   with_items: "{{ jenkins_jobs }}"
 
 - name: Ensure job configs are in place
-  copy:
-    src: "files/jobs/{{ item }}.config.xml"
+  template:
+    src: "templates/jobs/{{ item }}.config.xml.j2"
     dest: "/var/lib/jenkins/jobs/{{ item }}/config.xml"
+    owner: jenkins
+    group: jenkins
   with_items: "{{ jenkins_jobs }}"
   notify: restart jenkins
 
@@ -195,6 +206,57 @@
   copy:
     src: files/scripts/
     dest: /var/lib/jenkins/scripts/
+    directory_mode: yes
     owner: jenkins
     group: jenkins
-    mode: u=rwx,g=rx,u=rx
+    mode: u=rwx,g=rx,o=rx
+
+- name: Ensure templated scripts are in place
+  template:
+    src: templates/scripts/{{ item }}.j2
+    dest: "/var/lib/jenkins/scripts/{{ item }}"
+    owner: jenkins
+    group: jenkins
+    mode: u=rwx,g=rx,o=rx
+  with_items:
+    - get-repos-branches.py
+
+- name: Ensure the .garden/repos-branches.properties file exists
+  lineinfile:
+    create: yes
+    path: /var/lib/jenkins/.garden/repos-branches.properties
+    line: "Repo\tBranch"
+    insertbefore: BOF
+    owner: jenkins
+    group: jenkins
+  register: repos_branches_properties_file
+
+- name: Run the get-repos-branches script to populate the repos-branches.properties file
+  become_user: jenkins
+  command: /var/lib/jenkins/scripts/get-repos-branches.py
+  when: repos_branches_properties_file.changed
+
+- name: Ensure cached config xml block directory exists
+  file:
+    path: /var/lib/jenkins/config-blocks.xml
+    state: directory
+    owner: jenkins
+    group: jenkins
+  tags: [ jenkins-config ]
+
+- name: Ensure our cached config xml block files are in place
+  copy:
+    dest: "/var/lib/jenkins/config-blocks.xml/{{ item.tag }}"
+    content: "{{ item.xml }}"
+  register: config_block_xml_files
+  with_items: "{{ jenkins_config_elements }}"
+  tags: [ jenkins-config ]
+
+- name: Update jenkins config.xml block(s)
+  shell: >
+    newxml=$(cat /var/lib/jenkins/config-blocks.xml/{{ item.tag }} | sed ':a;N;$!ba;s/\n//g' | sed 's/  */ /g' | sed 's/> </></g' | sed 's/^ //g' | sed 's/ $//g') && \
+    perl -i.last -p0e 's~<{{ item.tag }}(.+)<\/{{ item.tag }}>~'"$newxml"'~s' /var/lib/jenkins/config.xml
+  when: config_block_xml_files.changed
+  with_items: "{{ jenkins_config_elements }}"
+  notify: restart jenkins
+  tags: [ jenkins-config ]

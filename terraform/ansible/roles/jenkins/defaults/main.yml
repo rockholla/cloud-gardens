@@ -64,6 +64,16 @@ jenkins_config_elements:
               <sid>deployer</sid>
             </assignedSIDs>
           </role>
+          <role name="deployer-refresh-repos-branches" pattern="refresh-repos-branches">
+            <permissions>
+              <permission>hudson.model.Item.Cancel</permission>
+              <permission>hudson.model.Item.Read</permission>
+              <permission>hudson.model.Item.Build</permission>
+            </permissions>
+            <assignedSIDs>
+              <sid>deployer</sid>
+            </assignedSIDs>
+          </role>
         </roleMap>
         <roleMap type="globalRoles">
           <role name="admin" pattern=".*">

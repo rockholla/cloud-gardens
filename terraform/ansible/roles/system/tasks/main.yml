@@ -1,0 +1,9 @@
+---
+
+- name: Ensure url-friendly-timestamp script is installed
+  copy:
+    content: |
+      #!/bin/bash
+      echo $(/bin/date +%Y-%m-%d_%H-%M-%S)
+    dest: /usr/local/bin/url-friendly-timestamp
+    mode: u=rwx,g=rx,o=rx

@@ -62,6 +62,9 @@
     block: |
       touch ~/.sudo_as_admin_successful
 
+      export JENKINS_HOME=/var/lib/jenkins
+      export JENKINS_URL=https://{{ ci_subdomain }}.{{ domain }}
+
       export GARDEN_NAME="{{ garden }}"
       export GARDEN_DOMAIN="{{ domain }}"
       export GARDEN_AWS_REGION="{{ aws_region }}"

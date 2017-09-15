@@ -1,18 +1,20 @@
 #!/bin/bash
 
-set -e
+rootexec=${1:-true}
 
-source ~/.profile
-cd ~/scripts
-source common-variables.sh
-source repo-branch-parser.sh
+if $rootexec; then
+  set -e
+  source $JENKINS_HOME/.profile
+  source $JENKINS_HOME/scripts/common-variables.sh
+  source $JENKINS_HOME/scripts/repo-branch-parser.sh
+fi
 
 clone=${clone:-true}
 
 echo "Building ${repo_branch_id}..."
 
-if [ $clone == true ] || [ ! -d ~/.garden/repos-branches/$repo_branch_id ]; then
-  . ~/scripts/clone.sh
+if [ $clone == true ] || [ ! -d $JENKINS_HOME/.garden/repos-branches/$repo_branch_id ]; then
+  . $JENKINS_HOME/scripts/clone.sh
 fi
 
 eval_id="$repo_branch_id"

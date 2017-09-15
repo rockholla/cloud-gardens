@@ -9,6 +9,8 @@ var afterCreateKey  = require(path.join(__dirname, 'create-key')).callback;
 var yamljs          = require('yamljs');
 var lnf             = require('lnf');
 var baseConfig      = require('config');
+var nodeSsh         = require('node-ssh');
+var ssh             = new nodeSsh();
 var config          = null;
 
 exports.command = 'tend [garden]';
@@ -100,13 +102,30 @@ exports.awsHandler = function(argv) {
                               result.stateBucket,
                               Gardens.Aws.getTerraformArgs(argv, config, keyName, result.hostedZoneId));
   }).then(function(result) {
+    // see if we need to reboot our bastion instance after this tend
+    var onSshError = function (error) {
+      winston.error("Error determining if the bastion instance needs rebooting, you can do it manually if so. Here's the error:");
+      winston.error(error);
+    };
+    ssh.connect({
+      host: config.bastion.subdomains.ci + '.' + config.domain,
+      username: 'ubuntu',
+      privateKey: path.resolve(__dirname, '..', '.gardens', argv.profile, argv.garden, '.keys', keyName)
+    }).then(function () {
+      ssh.execCommand('sudo bash -c "([[ -e /var/run/reboot-required ]] && echo \'rebooting bastion instance\' && shutdown -r now) || echo \'no reboot required\'"').then(function (result) {
+        if (result.stdout.indexOf('rebooting bastion instance') >= 0) {
+          winston.warn("The bastion instance required a reboot, it may be another minute or so before it's back up");
+        }
+        ssh.dispose();
+      }, onSshError);
+    }).catch(onSshError);
     removeAnsibleVars();
     winston.info("Done tending the garden");
     winston.info("Name servers:");
     nameServers.forEach(function(nameServer) {
       winston.info(`    ${nameServer}`);
     });
-    winston.info("You should make sure the registrar for the domain '" + config.domain + "' is updated to point to the name servers above.")
+    winston.info("You should make sure the registrar for the domain '" + config.domain + "' is updated to point to the name servers above.");
   }).catch(function(error) {
     winston.error(error);
     removeAnsibleVars();

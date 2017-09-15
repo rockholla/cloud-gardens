@@ -45,9 +45,11 @@
     - name: Include customization variables
       include_vars:
         dir: "{{ playbook_dir }}/.custom/vars/bastion"
+      when: custom_bastion_vars.stat.exists
       tags: [ always ]
 
   roles:
+    - { role: system, tags: [ system ] }
     - { role: aws, tags: [ jenkins, aws ] }
     - { role: bcrypt, tags: [ bcrypt ] }
     - role: ssl

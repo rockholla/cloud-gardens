@@ -1,6 +1,6 @@
 #!/bin/bash
 
-jenkins_profile="/var/lib/jenkins/.profile"
+jenkins_profile="$JENKINS_HOME/.profile"
 if [ ! -f $jenkins_profile ]; then
   touch $jenkins_profile
 fi

@@ -9,7 +9,7 @@ source $JENKINS_HOME/scripts/garden-helper.sh
 
 echo "Deploying ${repo_branch_id}..."
 
-if [ -d $JENKINS_HOME/.garden/repos-branches/$repo_branch_id ]; then
+if [ ! -d $JENKINS_HOME/.garden/repos-branches/$repo_branch_id ]; then
   Build=true
   Pull=true
 fi
@@ -99,7 +99,7 @@ if $Build; then
 
   # Wait for the service/site/deployment to be ready
   echo "Waiting for the deployment to become ready..."
-  while ! curl --insecure -s -o /dev/null -w "%{http_code}" "https://${subdomain}.${GARDEN_DOMAIN}/wp-login.php" | grep "200"; do
+  while curl --insecure -s -o /dev/null -w "%{http_code}" "https://${subdomain}.${GARDEN_DOMAIN}" | grep -e "404" -e "502" -e "503"; do
     sleep 5
   done
 fi

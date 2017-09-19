@@ -3,8 +3,8 @@
     "level": "info",
     "colors": {
       "debug": "blue",
-      "verbose": "green",
-      "info": "white",
+      "verbose": "cyan",
+      "info": "green",
       "warn": "yellow",
       "error": "red"
     },

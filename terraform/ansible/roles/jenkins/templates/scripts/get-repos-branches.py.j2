@@ -26,7 +26,7 @@ while results:
 
 for repo in repos:
   print 'finding branches for ' + repo + ' at ' + branchesUrls[repo] + '...'
-  response = requests.get(branchesUrls[repo], auth=HTTPBasicAuth('{{ github_deployer_username }}', '{{ github_deployer_token }}'))
+  response = requests.get(branchesUrls[repo] + '?per_page=100', auth=HTTPBasicAuth('{{ github_deployer_username }}', '{{ github_deployer_token }}'))
   if (response.ok):
     branchesJson = json.loads(response.text or response.content)
     for branchJson in branchesJson:

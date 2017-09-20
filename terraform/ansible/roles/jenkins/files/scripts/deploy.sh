@@ -20,6 +20,9 @@ fi
 
 echo "Determining alias/subdomain for the deployment..."
 alias=$($JENKINS_HOME/scripts/yaml-reader.py $JENKINS_HOME/.garden/repos-branches/$repo_branch_id/.gardens/config.yml alias)
+if [ -z "$alias" ]; then
+  alias="$repo_formatted"
+fi
 subdomain="${alias}-${branch_formatted}"
 echo "Set subdomain for deployment as $subdomain"
 if [ ! -d "$JENKINS_HOME/.garden/deployments/$subdomain" ]; then
@@ -44,6 +47,7 @@ local_image="${repo_formatted}:${branch_formatted}"
 custom_image_build=false
 deployment_cache_path="/var/lib/jenkins/.garden/deployments/$subdomain"
 echo "$repo_branch_id" > $deployment_cache_path/repo_branch_id
+echo "$repo_formatted" > $deployment_cache_path/repo_formatted
 
 eval_id="$repo_branch_id"
 eval_path="repos-branches/${eval_id}"

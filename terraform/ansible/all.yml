@@ -1,2 +1,2 @@
 ---
-- { include: bastion.yml, tags: [ bastion ] }
+- { include_playbook: bastion.yml, tags: [ bastion ] }

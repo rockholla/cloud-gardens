@@ -1,7 +1,7 @@
 ---
 
-- include: master.yml
+- include_tasks: master.yml
   when: ssl_certs_is_master == true
 
-- include: slave.yml
+- include_tasks: slave.yml
   when: (not ssl_certs_is_master) and ssl_certs_master_ready

@@ -118,6 +118,13 @@ resource "aws_instance" "bastion" {
     Name    = "${var.garden}-bastion-${count.index + 1}"
     Garden  = "${var.garden}"
   }
+
+  provisioner "remote-exec" {
+    when = "destroy"
+    inline = [
+      "sudo /usr/local/bin/jenkins-backup.sh"
+    ]
+  }
 }
 
 resource "null_resource" "bastion_setup" {

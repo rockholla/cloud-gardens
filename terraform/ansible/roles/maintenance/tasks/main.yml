@@ -15,12 +15,12 @@
     job: "[[ -d /var/lib/jenkins/.garden/.tests ]] && /usr/bin/find /var/lib/jenkins/.garden/.tests -ctime +10 -exec /bin/rm -rf {} +"
     state: present
 
-- name: Add a cron job to clean the garden deployment backups directory (remove items older than 10 days) every day
+- name: Add a cron job to clean the garden deployment backups directory (remove items older than 14 days) every day
   cron:
     name: "clean deployment backups"
     hour: 1
     minute: 20
-    job: "[[ -d /var/lib/jenkins/userContent/backups ]] && /usr/bin/find /var/lib/jenkins/userContent/backups -ctime +10 -exec /bin/rm -rf {} +"
+    job: "[[ -d /var/lib/jenkins/userContent/backups ]] && /usr/bin/find /var/lib/jenkins/userContent/backups -ctime +14 -exec /bin/rm -rf {} +"
     state: present
 
 - name: Add a cron job to clean docker artifacts for the jenkins user every day
@@ -33,10 +33,15 @@
     user: jenkins
     state: present
 
-- name: Add cron job to backup /var/lib/jenkins to s3 every 3 hours
+- name: Ensure local Jenkins backup script is in place
+  copy:
+    content: "/bin/tar --exclude='/var/lib/jenkins/.garden/repos-branches' --exclude='/var/lib/jenkins/.garden/.tests' -zcvf /tmp/jenkins.tar.gz /var/lib/jenkins/ && /usr/local/bin/aws s3 cp /tmp/jenkins.tar.gz s3://{{ garden_s3_bucket_backups }}/jenkins-$(/usr/local/bin/url-friendly-timestamp).tar.gz"
+    dest: /usr/local/bin/jenkins-backup.sh
+    mode: u=rwx,g=rx,o=rx
+
+- name: Add cron job to backup /var/lib/jenkins to s3 every 30 minutes
   cron:
     name: "backup jenkins garden directory"
-    minute: 0
-    hour: "*/3"
-    job: "/bin/tar --exclude='/var/lib/jenkins/.garden/repos-branches' --exclude='/var/lib/jenkins/.garden/.tests' -zcvf /tmp/jenkins.tar.gz /var/lib/jenkins/ && /usr/local/bin/aws s3 cp /tmp/jenkins.tar.gz s3://{{ garden_s3_bucket_backups }}/jenkins-$(/usr/local/bin/url-friendly-timestamp).tar.gz"
+    minute: "*/30"
+    job: "/usr/local/bin/jenkins-backup.sh"
     state: present

@@ -1,13 +1,13 @@
 ---
 
-- include: install.yml
+- include_tasks: install.yml
 
 - name: Ensure Jenkins is started and runs on startup.
   service: name=jenkins state=started enabled=yes
 
-- include: settings.yml
-- include: users.yml
-- include: plugins.yml
+- include_tasks: settings.yml
+- include_tasks: users.yml
+- include_tasks: plugins.yml
 
 - name: Ensure required python packages are installed
   pip:

@@ -26,10 +26,18 @@ resource "aws_s3_bucket" "garden_backups" {
   region = "${var.region}"
   lifecycle_rule {
     id      = "backups"
-    prefix  = ""
+    prefix  = "*"
     enabled = true
     expiration {
       days = 14
+    }
+  }
+  lifecycle_rule {
+    id      = "jenkins-backups"
+    prefix  = "jenkins-"
+    enabled = true
+    expiration {
+      days = 5
     }
   }
 }

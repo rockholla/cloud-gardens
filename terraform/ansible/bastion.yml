@@ -74,6 +74,6 @@
       register: custom_bastion_include
       tags: [ customizations ]
 
-    - include: "{{ playbook_dir }}/.custom/bastion.yml"
+    - include_tasks: "{{ playbook_dir }}/.custom/bastion.yml"
       when: (custom_bastion_include is defined) and (custom_bastion_include.stat.exists)
       tags: [ customizations ]

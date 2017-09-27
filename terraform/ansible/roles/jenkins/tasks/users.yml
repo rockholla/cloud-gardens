@@ -37,6 +37,7 @@
     cp -r /var/lib/jenkins/users.groovy/* /var/lib/jenkins/init.groovy.d/ && chmod +x /var/lib/jenkins/init.groovy.d/*
   register: users_copied
   when: admin_user.changed or other_users.changed
+  notify: restart jenkins
 
 - name: Immediately restart Jenkins if we need to update users
   service: name=jenkins state=restarted

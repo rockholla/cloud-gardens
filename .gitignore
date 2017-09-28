@@ -7,3 +7,4 @@ config/*
 .gardens
 !.gardens/README.md
 *.tfstate*
+package-lock.json

@@ -1,6 +1,6 @@
 # Cloud Gardens: plant your projects, help them grow
 
-[![Build Status](https://circleci.com/gh/rockholla/cloud-gardens/tree/develop.svg?style=shield&circle-token=e3e9f04ca5214129ee0b8b113b6f0073640a7b09)](https://circleci.com/gh/rockholla/cloud-gardens/)
+[![Build Status](https://circleci.com/gh/rockholla/cloud-gardens/tree/master.svg?style=shield&circle-token=e3e9f04ca5214129ee0b8b113b6f0073640a7b09)](https://circleci.com/gh/rockholla/cloud-gardens/)
 
 Requirements:
 

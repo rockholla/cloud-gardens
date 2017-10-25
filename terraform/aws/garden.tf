@@ -95,10 +95,6 @@ variable "ecs_instance_ebs_optimized" {
 
 variable "ecs_min_size" {
   description = "the minimum number of instances to use in the default ecs cluster"
-
-  // create 2 instances in our cluster by default
-  // 1 instances to run our service with high-availability
-  // 1 extra instance so we can deploy without port collisions
   default = 2
 }
 

@@ -19,8 +19,8 @@ A Gardener oversees the creation and maintenance of gardens.  It's pretty easy t
 
 Some requirements:
 
-1. [Nodejs](https://nodejs.org)
-2. [Terraform](https://www.terraform.io/intro/getting-started/install.html)
+1. [Nodejs >= 8.6](https://nodejs.org)
+2. [Terraform >= 0.10](https://www.terraform.io/intro/getting-started/install.html)
 3. [Create a local named AWS profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-multiple-profiles)
 
 To install node dependencies, make sure you run `npm install` first.

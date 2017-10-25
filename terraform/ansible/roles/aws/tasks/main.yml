@@ -60,7 +60,7 @@
 - name: Ensure ecs-cli is installed
   command: >
     curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest
-  when: not ecs_cli_binary.stat.exists
+  when: (not ecs_cli_binary.stat.exists) or update_ecs_cli
   args:
     warn: no
 

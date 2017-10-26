@@ -18,28 +18,41 @@ exports.command = 'tend [garden]';
 exports.desc = 'for starting or maintaining a garden. A garden is a collection of integration resources and application environments (dev, testing, etc), all in its own cloud ecosystem.';
 
 function writeAnsibleVars(argv) {
+  var ansibleVars = {
+    garden: argv.garden,
+    domain: config.domain,
+    bastion_services_username: config.bastion.services.username,
+    bastion_services_password: config.bastion.services.password,
+    aws_region: argv.region,
+    traefik_ci_subdomain: config.bastion.subdomains.ci,
+    traefik_status_subdomain: config.bastion.subdomains.status,
+    traefik_ecs_region: argv.region,
+    letsencrypt_enabled: config.ssl.letsencrypt.enabled,
+    letsencrypt_ca: config.ssl.letsencrypt.ca,
+    letsencrypt_registration_info_base64: config.ssl.letsencrypt.registration_info ? (new Buffer(JSON.stringify(config.ssl.letsencrypt.registration_info)).toString('base64')) : "",
+    letsencrypt_account_key_base64: config.ssl.letsencrypt.account_key ? (new Buffer(config.ssl.letsencrypt.account_key).toString('base64')) : "",
+    ssl_cert_key_base64: config.ssl.cert.key ? (new Buffer(config.ssl.cert.key).toString('base64')) : "",
+    ssl_cert_bundle_base64: config.ssl.cert.bundle ? (new Buffer(config.ssl.cert.bundle).toString('base64')) : "",
+    github_deployer_username: config.github.deployer.username,
+    github_deployer_token: config.github.deployer.token,
+    github_deployer_ssh_key_base64: config.github.deployer.ssh_key ? (new Buffer(config.github.deployer.ssh_key).toString('base64')) : "",
+    jenkins_users: config.bastion.jenkins.users
+  };
+  var parseExtraVar = function (value) {
+    if (value.toLowerCase() == "yes" || value.toLowerCase() == "true") return true;
+    if (value.toLowerCase() == "no" || value.toLowerCase() == "false") return false;
+    if (!isNaN(parseFloat(value)) && isFinite(value)) return parseFloat(value);
+    return value;
+  };
+  if (argv['extra-vars']) {
+    var extraVars = argv['extra-vars'].split(',');
+    for (var i = 0; i < extraVars.length; i++) {
+      ansibleVars[extraVars[i].split('=')[0]] = parseExtraVar(extraVars[i].split('=')[1]);
+    }
+  }
   fs.writeFileSync(
     path.resolve(__dirname, '..', 'terraform', 'ansible', 'vars', 'overrides', 'main.yml'),
-    yamljs.stringify({
-      garden: argv.garden,
-      domain: config.domain,
-      bastion_services_username: config.bastion.services.username,
-      bastion_services_password: config.bastion.services.password,
-      aws_region: argv.region,
-      traefik_ci_subdomain: config.bastion.subdomains.ci,
-      traefik_status_subdomain: config.bastion.subdomains.status,
-      traefik_ecs_region: argv.region,
-      letsencrypt_enabled: config.ssl.letsencrypt.enabled,
-      letsencrypt_ca: config.ssl.letsencrypt.ca,
-      letsencrypt_registration_info_base64: config.ssl.letsencrypt.registration_info ? (new Buffer(JSON.stringify(config.ssl.letsencrypt.registration_info)).toString('base64')) : "",
-      letsencrypt_account_key_base64: config.ssl.letsencrypt.account_key ? (new Buffer(config.ssl.letsencrypt.account_key).toString('base64')) : "",
-      ssl_cert_key_base64: config.ssl.cert.key ? (new Buffer(config.ssl.cert.key).toString('base64')) : "",
-      ssl_cert_bundle_base64: config.ssl.cert.bundle ? (new Buffer(config.ssl.cert.bundle).toString('base64')) : "",
-      github_deployer_username: config.github.deployer.username,
-      github_deployer_token: config.github.deployer.token,
-      github_deployer_ssh_key_base64: config.github.deployer.ssh_key ? (new Buffer(config.github.deployer.ssh_key).toString('base64')) : "",
-      jenkins_users: config.bastion.jenkins.users
-    })
+    yamljs.stringify(ansibleVars)
   );
 };
 

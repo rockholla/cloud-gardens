@@ -82,6 +82,12 @@ var argv = require('yargs')
     nargs: 1,
     default: 'all'
   })
+  .option('extra-vars', {
+    alias: 'e',
+    describe: 'comma-delimited list of ansible extra vars, like: -e "myvar=value,anothervar=true"',
+    nargs: 1,
+    default: 'all'
+  })
   .help('h')
   .alias('help', 'h')
   .demandCommand(1, 'you must include a command')

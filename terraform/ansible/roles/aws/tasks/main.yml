@@ -64,6 +64,10 @@
   args:
     warn: no
 
+- set_fact:
+    update_ecs_cli: no
+  when: update_ecs_cli
+
 - name: Make sure ecs-cli binary has correct permissions
   file:
     path: /usr/local/bin/ecs-cli

@@ -87,19 +87,13 @@ if $Build; then
   perl -pi -e "s@\{\{ timestamp \}\}@${timestamp}@g" docker-compose.yml
   cp docker-compose.yml $JENKINS_HOME/.garden/deployments/$subdomain/
 
-  set +e
-
-  echo "Creating an ECS service for the deploy if it's not already created..."
-  ECS_CLUSTER="${GARDEN_NAME}-ecs-cluster" ecs-cli compose --file "docker-compose.yml" --project-name "${subdomain}" service create &>/dev/null
-  echo "Bringing up the ECS service..."
-  service_up_result=$(ECS_CLUSTER="${GARDEN_NAME}-ecs-cluster" ecs-cli compose --file "docker-compose.yml" --project-name "${subdomain}" service up 2>&1)
-
-  if [ $? -ne 0 ]; then
-    printf "Error bringing up the ECS service:\n${service_up_result}"
-    exit 1
+  echo "Seeing if an existing ECS service is already created and running..."
+  if ! ecs-cli ps --cluster "${GARDEN_NAME}-ecs-cluster" | grep " ${subdomain}:"; then
+    echo "Creating a new ECS service"
+    ECS_CLUSTER="${GARDEN_NAME}-ecs-cluster" ecs-cli compose --file "docker-compose.yml" --project-name "${subdomain}" service create
   fi
-
-  set -e
+  echo "Bringing up or updating the ECS service..."
+  ECS_CLUSTER="${GARDEN_NAME}-ecs-cluster" ecs-cli compose --file "docker-compose.yml" --project-name "${subdomain}" service up
 
   # Wait for the service/site/deployment to be ready
   echo "Waiting for the deployment to become ready..."

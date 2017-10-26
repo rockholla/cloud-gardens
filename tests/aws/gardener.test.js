@@ -143,7 +143,7 @@ describe('Aws.Gardener', function() {
     };
     var gardener = getAwsGardner(awsMock);
     gardener.createHostedZone('__tests-hosted-zone').then(function(result) {
-      expect(result).to.equal('created hosted zone');
+      expect(result.data).to.equal('created hosted zone');
     }).catch(function(error) {
       expect(error).to.equal(null);
     });
@@ -160,7 +160,7 @@ describe('Aws.Gardener', function() {
     };
     var gardener = getAwsGardner(awsMock);
     gardener.createHostedZone('__tests-hosted-zone').then(function(result) {
-      expect(result).to.equal('__tests-existing-hosted-zone');
+      expect(result.data).to.equal('__tests-existing-hosted-zone');
     }).catch(function(error) {
       expect(error).to.equal(null);
     });
@@ -174,7 +174,7 @@ describe('Aws.Gardener', function() {
     };
     var gardener = getAwsGardner(awsMock);
     gardener.createHostedZone('__tests-hosted-zone').then(function(result) {
-      expect(result).to.equal(null);
+      expect(result.data).to.equal(null);
     }).catch(function(error) {
       expect(error.message).to.equal('random error message');
     });
@@ -191,7 +191,7 @@ describe('Aws.Gardener', function() {
     };
     var gardener = getAwsGardner(awsMock);
     gardener.createHostedZone('__tests-hosted-zone').then(function(result) {
-      expect(result).to.equal(null);
+      expect(result.data).to.equal(null);
     }).catch(function(error) {
       expect(error.message).to.equal('random error message');
     });
@@ -208,7 +208,7 @@ describe('Aws.Gardener', function() {
     };
     var gardener = getAwsGardner(awsMock);
     gardener.createHostedZone('__tests-hosted-zone').then(function(result) {
-      expect(result).to.equal(null);
+      expect(result.data).to.equal(null);
     }).catch(function(error) {
       expect(error.message).to.equal('random error message');
     });

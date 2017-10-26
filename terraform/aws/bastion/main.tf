@@ -119,11 +119,8 @@ resource "aws_instance" "bastion" {
     Garden  = "${var.garden}"
   }
 
-  provisioner "remote-exec" {
-    when = "destroy"
-    inline = [
-      "sudo /usr/local/bin/jenkins-backup.sh"
-    ]
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -289,6 +286,14 @@ resource "null_resource" "bastion_certs_sync" {
 data "external" "done" {
   depends_on = ["null_resource.bastion_certs_sync"]
   program = ["echo", "{\"message\": \"done\"}"]
+}
+
+resource "aws_route53_record" "root" {
+  zone_id = "${var.hosted_zone_id}"
+  name    = "${var.domain}"
+  type    = "A"
+  ttl     = "300"
+  records = ["${aws_instance.bastion.*.public_ip}"]
 }
 
 resource "aws_route53_record" "catchall" {

@@ -10,6 +10,7 @@ var yamljs          = require('yamljs');
 var lnf             = require('lnf');
 var baseConfig      = require('config');
 var nodeSsh         = require('node-ssh');
+var inquirer        = require('inquirer');
 var ssh             = new nodeSsh();
 var config          = null;
 
@@ -96,12 +97,30 @@ exports.awsHandler = function(argv) {
     winston.info('Prepping prior to terraforming');
     return gardener.terraformPrep(config.domain);
   }).then(function(result) {
+    if (result.created) {
+      winston.warn("Looks like you've just added a new hosted zone with this tend, you should make sure the registrar for the domain '" + config.domain + "' is updated to point to these name servers:\n\n" +
+                    result.nameServers.join("\n") + "\n");
+      return inquirer.prompt([{
+        name: "done",
+        message: "type 'done' when that's complete (in certain cases you should even wait a little while for DNS propagation to take effect, you'll know if you didn't wait long enough if the ssl cert creation process fails)",
+        type: "input"
+      }]).then(function(answer) {
+        if (answer.done.toLowerCase() != 'done') {
+          winston.warn('OK, you can restart the tend when the name servers are updated and you\'re ready to continue');
+          process.exit();
+        }
+        return Promise.resolve(result);
+      });
+    } else {
+      return Promise.resolve(result);
+    }
+  }).then(function (result) {
     nameServers = result.nameServers;
     writeAnsibleVars(argv);
     return gardener.terraform((argv.dryrun ? 'plan' : 'apply'),
                               result.stateBucket,
                               Gardens.Aws.getTerraformArgs(argv, config, keyName, result.hostedZoneId));
-  }).then(function(result) {
+  }).then(function (result) {
     // see if we need to reboot our bastion instance after this tend
     var onSshError = function (error) {
       winston.error("Error determining if the bastion instance needs rebooting, you can do it manually if so. Here's the error:");

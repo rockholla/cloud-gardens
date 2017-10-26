@@ -90,7 +90,7 @@ variable "ecs_instance_type" {
 
 variable "ecs_instance_ebs_optimized" {
   description = "use EBS - not all instance types support EBS"
-  default     = true
+  default     = false
 }
 
 variable "ecs_min_size" {

@@ -6,6 +6,7 @@ var aws     = require('aws-sdk');
 var config  = require('config');
 var winston = require('winston');
 var mkdirp  = require('mkdirp');
+var shell   = require('child_process');
 
 winston.setLevels({
   error: 0, warn: 1, info: 2, verbose: 3, debug: 4
@@ -33,6 +34,18 @@ if (config.log.file) {
     maxFiles: 10,
     json: false
   });
+}
+
+var terraformVersion = shell.execSync('terraform --version', { stdio: ['pipe', 'pipe', process.stderr] }).toString('utf8');
+var nodeVersion = process.version.replace('v', '');
+terraformVersion = terraformVersion.split(' v')[1].split("\n")[0];
+if (nodeVersion.split('.')[0] < 8) {
+  winston.error('Node version 8 or greater required');
+  process.exit(1);
+}
+if (terraformVersion.split('.')[1] < 10) {
+  winston.error('Terraform version 0.10 or greater required');
+  process.exit(1);
 }
 
 var argv = require('yargs')

@@ -86,7 +86,7 @@ var argv = require('yargs')
     alias: 'e',
     describe: 'comma-delimited list of ansible extra vars, like: -e "myvar=value,anothervar=true"',
     nargs: 1,
-    default: 'all'
+    default: null
   })
   .help('h')
   .alias('help', 'h')

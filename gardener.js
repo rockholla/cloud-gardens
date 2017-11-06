@@ -7,6 +7,7 @@ var config  = require('config');
 var winston = require('winston');
 var mkdirp  = require('mkdirp');
 var shell   = require('child_process');
+var colors  = require('colors');
 
 winston.setLevels({
   error: 0, warn: 1, info: 2, verbose: 3, debug: 4
@@ -51,7 +52,9 @@ var remoteHeadVersion = shell.execSync('git ls-remote https://github.com/rockhol
 var localVersion      = shell.execSync('git rev-parse HEAD').toString('utf8').trim();
 var localBranch       = shell.execSync('git rev-parse --abbrev-ref HEAD').toString('utf8').trim();
 if (localBranch == 'master' && localVersion != remoteHeadVersion) {
-  winston.warn("There's a new version of Cloud Gardens available, you should 'git pull origin master' to update");
+  console.log("===============================================================================================".yellow);
+  console.log("There's a new version of Cloud Gardens available, you should 'git pull origin master' to update".yellow);
+  console.log("===============================================================================================".yellow);
 }
 
 var argv = require('yargs')

@@ -36,7 +36,7 @@ if (config.log.file) {
   });
 }
 
-var terraformVersion = shell.execSync('terraform --version', { stdio: ['pipe', 'pipe', process.stderr] }).toString('utf8');
+var terraformVersion = shell.execSync('terraform --version').toString('utf8');
 var nodeVersion = process.version.replace('v', '');
 terraformVersion = terraformVersion.split(' v')[1].split("\n")[0];
 if (nodeVersion.split('.')[0] < 8) {
@@ -46,6 +46,12 @@ if (nodeVersion.split('.')[0] < 8) {
 if (terraformVersion.split('.')[1] < 10) {
   winston.error('Terraform version 0.10 or greater required');
   process.exit(1);
+}
+var remoteHeadVersion = shell.execSync('git ls-remote https://github.com/rockholla/cloud-gardens.git').toString('utf8').split(/\s+/g)[0].trim();
+var localVersion      = shell.execSync('git rev-parse HEAD').toString('utf8').trim();
+var localBranch       = shell.execSync('git rev-parse --abbrev-ref HEAD').toString('utf8').trim();
+if (localBranch == 'master' && localVersion != remoteHeadVersion) {
+  winston.warn("There's a new version of Cloud Gardens available, you should 'git pull origin master' to update");
 }
 
 var argv = require('yargs')

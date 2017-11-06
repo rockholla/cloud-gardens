@@ -46,7 +46,8 @@
       "users": [{
         "username": "deployer",
         "password": "deployer"
-      }]
+      }],
+      "persist_repos": true
     }
   },
   "ecs": {

@@ -36,7 +36,8 @@ function writeAnsibleVars(argv) {
     github_deployer_username: config.github.deployer.username,
     github_deployer_token: config.github.deployer.token,
     github_deployer_ssh_key_base64: config.github.deployer.ssh_key ? (new Buffer(config.github.deployer.ssh_key).toString('base64')) : "",
-    jenkins_users: config.bastion.jenkins.users
+    jenkins_users: config.bastion.jenkins.users,
+    garden_persist_repos: config.bastion.jenkins.persist_repos
   };
   var parseExtraVar = function (value) {
     if (value.toLowerCase() == "yes" || value.toLowerCase() == "true") return true;

@@ -4,6 +4,9 @@ domain: ""
 aws_region: ""
 ci_subdomain: ""
 hosted_zone_id: ""
+
+garden_persist_repos: yes
+
 jenkins_jobs:
   - refresh-repos-branches
   - build

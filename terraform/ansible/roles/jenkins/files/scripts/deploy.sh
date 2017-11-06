@@ -108,4 +108,9 @@ eval_config_path="repos-branches/${eval_id}/.gardens"
 eval_type="after_deploy"
 . "${scripts_dir}/eval.sh"
 
+if ! $GARDEN_PERSIST_REPOS; then
+  rm -rf $JENKINS_HOME/.garden/repos-branches/$repo_branch_id
+  rm -rf $JENKINS_HOME/.garden/.tests/$repo_branch_id
+fi
+
 echo "Deployment is done and the environment is ready at https://${subdomain}.${GARDEN_DOMAIN}"

@@ -18,7 +18,7 @@ if [ $clone == true ] || [ ! -d $JENKINS_HOME/.garden/repos-branches/$repo_branc
 fi
 
 mkdir -p $JENKINS_HOME/.garden/.tests
-sudo cp -r $JENKINS_HOME/.garden/repos-branches/$repo_branch_id $JENKINS_HOME/.garden/.tests/
+cp -r $JENKINS_HOME/.garden/repos-branches/$repo_branch_id $JENKINS_HOME/.garden/.tests/
 eval_id="$repo_branch_id"
 eval_path=".tests/${eval_id}"
 eval_config_path="${eval_path}/.gardens"

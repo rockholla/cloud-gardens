@@ -39,9 +39,10 @@
     dest: /usr/local/bin/jenkins-backup.sh
     mode: u=rwx,g=rx,o=rx
 
-- name: Add cron job to backup /var/lib/jenkins to s3 every 30 minutes
+- name: Add cron job to backup /var/lib/jenkins to s3 every 3 hours
   cron:
     name: "backup jenkins garden directory"
-    minute: "*/30"
+    minute: "0"
+    hour: "*/3"
     job: "/usr/local/bin/jenkins-backup.sh"
     state: present
